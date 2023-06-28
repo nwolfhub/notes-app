@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 
-class Welcone : AppCompatActivity() {
+class Welcome : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -16,6 +16,9 @@ class Welcone : AppCompatActivity() {
         var state:Int = 1
         val nextBtn = findViewById<Button>(R.id.continueButton)
         val welcomeText = findViewById<TextView>(R.id.welcomeText)
+        val preferences = getSharedPreferences("main", MODE_PRIVATE)
+        val welcomed = preferences.getBoolean("welcomed", false)
+        if(welcomed) {startActivity(Intent(this, Notes::class.java)); finish()}
         nextBtn.setOnClickListener {
             when (state) {
                 1 -> {
@@ -24,6 +27,7 @@ class Welcone : AppCompatActivity() {
                     state = 2
                 }
                 2 -> {
+                    preferences.edit().putBoolean("welcomed", true).apply()
                     val intent:Intent = Intent(this, Notes::class.java)
                     startActivity(intent)
                     finish()
