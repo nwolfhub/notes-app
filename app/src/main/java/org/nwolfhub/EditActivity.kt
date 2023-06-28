@@ -88,6 +88,11 @@ class EditActivity : AppCompatActivity() {
                 startActivity(Intent(this, Notes::class.java))
                 finish()
             }
-        }.setNegativeButton("No") { _, _ ->}.show()
+        }.setNegativeButton("No") { _, _ ->
+            run {
+                startActivity(Intent(this, Notes::class.java))
+                finish()
+            }
+        }.show()
     }
 }
