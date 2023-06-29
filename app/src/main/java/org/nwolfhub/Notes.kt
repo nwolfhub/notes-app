@@ -14,6 +14,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.databinding.ActivityNotesBinding
+import java.lang.Exception
 
 class Notes : AppCompatActivity() {
 
@@ -25,6 +26,9 @@ class Notes : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         getSupportActionBar()?.hide()
         binding = ActivityNotesBinding.inflate(layoutInflater)
+        try {
+            TestersApi().checkVersion(this)
+        } catch (_:Exception) {}
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
         PublicShared.preferences = preferences
         PublicShared.activity = this

@@ -76,9 +76,9 @@ class EditActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        val cache = getSharedPreferences("cache", MODE_PRIVATE)
         AlertDialog.Builder(this).setTitle("Do you want to save note?").setMessage("Do you want to save current note?").setPositiveButton("Yes", ){_, _ ->
             run {
-                val cache = getSharedPreferences("cache", MODE_PRIVATE)
                 if (nameModified && prevName != "newNote") preferences.edit().remove(prevName)
                     .putString(noteName.text.toString(), noteText.text.toString()).apply()
                 else preferences.edit()
@@ -90,6 +90,7 @@ class EditActivity : AppCompatActivity() {
             }
         }.setNegativeButton("No") { _, _ ->
             run {
+                cache.edit().remove(selected).apply()
                 startActivity(Intent(this, Notes::class.java))
                 finish()
             }
