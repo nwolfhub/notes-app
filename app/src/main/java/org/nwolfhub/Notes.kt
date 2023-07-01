@@ -29,7 +29,9 @@ class Notes : AppCompatActivity() {
         binding = ActivityNotesBinding.inflate(layoutInflater)
         try {
             TestersApi().checkVersion(this)
-        } catch (_:Exception) {}
+        } catch (e:Exception) {
+            e.printStackTrace()
+        }
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
         PublicShared.preferences = preferences
         PublicShared.activity = this
