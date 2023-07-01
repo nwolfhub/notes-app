@@ -1,6 +1,7 @@
 package org.nwolfhub
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.ContextMenu
 import android.view.LayoutInflater
@@ -26,6 +27,7 @@ class Notes : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         getSupportActionBar()?.hide()
+        window.statusBarColor = Color.parseColor("#FFFFFF")
         binding = ActivityNotesBinding.inflate(layoutInflater)
         try {
             TestersApi().checkVersion(this)

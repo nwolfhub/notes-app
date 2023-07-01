@@ -2,6 +2,7 @@ package org.nwolfhub
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -26,6 +27,7 @@ class EditActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
+        window.statusBarColor = Color.parseColor("#000000")
         supportActionBar?.hide()
         this.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE); //I don't care if it is deprecated or not. Fuck the person who thought that replacing this with a fuckton of code is a great idea
         preferences = getSharedPreferences("notes", MODE_PRIVATE)

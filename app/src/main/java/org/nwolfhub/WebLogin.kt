@@ -101,7 +101,7 @@ class WebLogin : AppCompatActivity() {
             }
             try {
                 val response = client.newCall(
-                    Request.Builder().url(server + "/api/users/login")
+                    Request.Builder().url("$server/api/users/login")
                         .post("username=$username\npassword=$password".toRequestBody()).build()
                 ).execute()
                 Log.d("web login", "Obtained code " + response.code)
@@ -113,14 +113,15 @@ class WebLogin : AppCompatActivity() {
                     runOnUiThread {
                         disableAll(findViewById(R.id.webLoginMainView))
                     }
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Connected to server!", 50, 10, 0, action)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Welcome to web!", 50, 30, 0, action)
                     Thread.sleep(3000)
                     val token = JsonParser.parseString(response.body!!.string()).asJsonObject.get("token").asString
                     Log.d("web login","Obtained token $token")
                     response.close()
                     runOnUiThread {
                         val preferences = getSharedPreferences("web", MODE_PRIVATE)
-                        preferences.edit().putString("token", token)
+                        preferences.edit().putString("token", token).apply()
+                        preferences.edit().putString("server", server).apply()
                         startActivity(Intent(this, Notes::class.java))
                         finish()
                     }
@@ -133,7 +134,79 @@ class WebLogin : AppCompatActivity() {
                     try {
                          error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
                     } catch (_:NullPointerException) {}
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 20, 3, 0, action)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 50, 40, 0, action)
+                }
+            } catch (e:NullPointerException) {
+                runOnUiThread {
+                    Toast.makeText(this, "Error while executing request: $e", Toast.LENGTH_LONG).show()
+                    welcomeToWeb.alpha=1f
+                    progressBar.alpha=0f
+                    welcomeToWeb.text=e.toString()
+                }
+            }
+            runOnUiThread {
+                for (button in buttons) {
+                    button.isEnabled = true
+                }
+            }
+        }.start()
+    }
+
+    private fun register(username:String, password:String, server:String, buttons:List<Button>, client: OkHttpClient) {
+        val welcomeToWeb: TextView = findViewById(R.id.welcomeToWeb)
+        val progressBar: ProgressBar = findViewById(R.id.loginBar)
+        Log.d("web login", "Attempting to register on $server")
+        val action:TextAction = object: TextAction() {
+            override fun applyText(text: String?) {
+                runOnUiThread {
+                    welcomeToWeb.text=text
+                }
+            }
+        }
+        for(button in buttons) {
+            button.isEnabled=false
+        }
+        Thread {
+            runOnUiThread {
+                ObjectAnimator.ofFloat(welcomeToWeb, "alpha", 0f).setDuration(100).start()
+                ObjectAnimator.ofFloat(progressBar, "alpha", 1f).setDuration(100).start()
+            }
+            try {
+                val response = client.newCall(
+                    Request.Builder().url("$server/api/users/register")
+                        .post("username=$username\npassword=$password".toRequestBody()).build()
+                ).execute()
+                Log.d("web login", "Obtained code " + response.code)
+                if(response.code==200) {
+                    runOnUiThread {
+                        ObjectAnimator.ofFloat(welcomeToWeb, "alpha", 1f).setDuration(100).start()
+                        ObjectAnimator.ofFloat(progressBar, "alpha", 0f).setDuration(100).start()
+                    }
+                    runOnUiThread {
+                        disableAll(findViewById(R.id.webLoginMainView))
+                    }
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Thanks for registering, welcome to web!", 50, 30, 0, action)
+                    Thread.sleep(3000)
+                    val token = JsonParser.parseString(response.body!!.string()).asJsonObject.get("token").asString
+                    Log.d("web login","Obtained token $token")
+                    response.close()
+                    runOnUiThread {
+                        val preferences = getSharedPreferences("web", MODE_PRIVATE)
+                        preferences.edit().putString("token", token).apply()
+                        preferences.edit().putString("server", server).apply()
+                        startActivity(Intent(this, Notes::class.java))
+                        finish()
+                    }
+                } else {
+                    runOnUiThread {
+                        ObjectAnimator.ofFloat(welcomeToWeb, "alpha", 1f).setDuration(100).start()
+                        ObjectAnimator.ofFloat(progressBar, "alpha", 0f).setDuration(100).start()
+                    }
+                    var error = "wrong server response"
+                    try {
+                        error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
+                    } catch (_:NullPointerException) {}
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 50, 40, 0, action)
                 }
             } catch (e:NullPointerException) {
                 runOnUiThread {
@@ -202,6 +275,8 @@ class WebLogin : AppCompatActivity() {
             loginButton.isClickable=false
             registerButton.isClickable=false
             returnButton.isClickable=false
+            username.setText("")
+            password.setText("")
             Handler(Looper.getMainLooper()).postDelayed({
                 loginButton.isClickable=true
                 registerButton.isClickable=true

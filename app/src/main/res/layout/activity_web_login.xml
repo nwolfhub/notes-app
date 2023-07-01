@@ -106,7 +106,7 @@
             android:id="@+id/welcomeToWeb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to web!"
+            android:text="Sync your notes with any server you like!"
             android:visibility="visible"
             android:alpha="1"
             app:layout_constraintBottom_toBottomOf="parent"
