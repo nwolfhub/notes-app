@@ -2,14 +2,19 @@ package org.nwolfhub
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.WindowInsets
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+
 
 class EditActivity : AppCompatActivity() {
     private var nameModified = false
@@ -22,6 +27,7 @@ class EditActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
         supportActionBar?.hide()
+        this.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE); //I don't care if it is deprecated or not. Fuck the person who thought that replacing this with a fuckton of code is a great idea
         preferences = getSharedPreferences("notes", MODE_PRIVATE)
         val save = findViewById<Button>(R.id.save)
         selected = preferences.getString("selected", "newNote").toString()
@@ -30,6 +36,7 @@ class EditActivity : AppCompatActivity() {
         val cache = getSharedPreferences("cache", MODE_PRIVATE)
         val settings = getSharedPreferences("settings", MODE_PRIVATE)
         val autoSave = settings.getBoolean("autosave", false)
+        UpdateColors.updateColors(this, findViewById(R.id.mainEditLayout), save, noteName, noteText)
         if(!selected.equals("newNote")) {noteName.text=selected;noteText.text=preferences.getString(selected, ""); prevName = selected} else nameModified=true
         if(cache.contains(selected)) {
             val builder = AlertDialog.Builder(this)
@@ -77,7 +84,9 @@ class EditActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         val cache = getSharedPreferences("cache", MODE_PRIVATE)
-        AlertDialog.Builder(this).setTitle("Do you want to save note?").setMessage("Do you want to save current note?").setPositiveButton("Yes", ){_, _ ->
+        AlertDialog.Builder(this).setTitle("Do you want to save note?").setMessage("Do you want to save current note?").setPositiveButton(
+            "Yes"
+        ){_, _ ->
             run {
                 if (nameModified && prevName != "newNote") preferences.edit().remove(prevName)
                     .putString(noteName.text.toString(), noteText.text.toString()).apply()
@@ -96,4 +105,6 @@ class EditActivity : AppCompatActivity() {
             }
         }.show()
     }
+
+
 }

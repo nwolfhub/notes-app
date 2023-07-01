@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId "org.nwolfhub"
-        minSdk 24
+        minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "0.0.1"
+        versionName "0.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -44,6 +44,8 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            resources.excludes.add("META-INF/LICENSE.md")
+            resources.excludes.add("META-INF/NOTICE.md")
         }
     }
 }
@@ -51,10 +53,13 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
     implementation 'androidx.activity:activity-compose:1.5.1'
+    implementation 'org.nwolfhub:utils:1.2.1'
     implementation platform('androidx.compose:compose-bom:2022.10.00')
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'

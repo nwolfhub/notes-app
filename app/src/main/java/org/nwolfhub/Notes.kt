@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnCreateContextMenuListener
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -43,6 +44,9 @@ class Notes : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.notes)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = NotesRecyclerAdapter(notes)
+        findViewById<Button>(R.id.webtimed).setOnClickListener{
+            startActivity(Intent(this, WebLogin::class.java))
+        }
         binding.fab.setOnClickListener { view ->
             preferences.edit().putString("selected", "newNote").apply()
             startActivity(Intent(this, EditActivity::class.java))
