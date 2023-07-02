@@ -35,6 +35,8 @@ import java.lang.NullPointerException
 
 class WebLogin : AppCompatActivity() {
 
+    private var canExit = true
+
     private fun animate(button:Button) {
         var prevX = 10f
         var prevY = 10f
@@ -85,6 +87,7 @@ class WebLogin : AppCompatActivity() {
         val welcomeToWeb: TextView = findViewById(R.id.welcomeToWeb)
         val progressBar: ProgressBar = findViewById(R.id.loginBar)
         Log.d("web login", "Attempting to login on $server")
+        canExit=false
         val action:TextAction = object: TextAction() {
             override fun applyText(text: String?) {
                 runOnUiThread {
@@ -114,7 +117,7 @@ class WebLogin : AppCompatActivity() {
                     runOnUiThread {
                         disableAll(findViewById(R.id.webLoginMainView))
                     }
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Welcome to web!", 50, 30, 0, action)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Welcome to web!", 50, 20, 0, action)
                     Thread.sleep(3000)
                     val token = JsonParser.parseString(response.body!!.string()).asJsonObject.get("token").asString
                     Log.d("web login","Obtained token $token")
@@ -135,7 +138,7 @@ class WebLogin : AppCompatActivity() {
                     try {
                          error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
                     } catch (_:NullPointerException) {}
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 50, 40, 0, action)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 20, 20, 0, action)
                 }
             } catch (e:NullPointerException) {
                 runOnUiThread {
@@ -150,6 +153,7 @@ class WebLogin : AppCompatActivity() {
                     button.isEnabled = true
                 }
             }
+            canExit=true
         }.start()
     }
 
@@ -157,6 +161,7 @@ class WebLogin : AppCompatActivity() {
         val welcomeToWeb: TextView = findViewById(R.id.welcomeToWeb)
         val progressBar: ProgressBar = findViewById(R.id.loginBar)
         Log.d("web login", "Attempting to register on $server")
+        canExit = false;
         val action:TextAction = object: TextAction() {
             override fun applyText(text: String?) {
                 runOnUiThread {
@@ -186,8 +191,8 @@ class WebLogin : AppCompatActivity() {
                     runOnUiThread {
                         disableAll(findViewById(R.id.webLoginMainView))
                     }
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Thanks for registering, welcome to web!", 50, 30, 0, action)
-                    Thread.sleep(3000)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Thanks for registering, welcome to web!", 50, 10, 0, action)
+                    Thread.sleep(5000)
                     val token = JsonParser.parseString(response.body!!.string()).asJsonObject.get("token").asString
                     Log.d("web login","Obtained token $token")
                     response.close()
@@ -207,7 +212,7 @@ class WebLogin : AppCompatActivity() {
                     try {
                         error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
                     } catch (_:NullPointerException) {}
-                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 50, 40, 0, action)
+                    Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to register: $error", 20, 20, 0, action)
                 }
             } catch (e:NullPointerException) {
                 runOnUiThread {
@@ -222,6 +227,7 @@ class WebLogin : AppCompatActivity() {
                     button.isEnabled = true
                 }
             }
+            canExit=true
         }.start()
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -311,7 +317,9 @@ class WebLogin : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        startActivity(Intent(this, Notes::class.java))
-        finish()
+        if(canExit) {
+            startActivity(Intent(this, Notes::class.java))
+            finish()
+        }
     }
 }

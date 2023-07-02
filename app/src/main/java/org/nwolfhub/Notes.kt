@@ -36,12 +36,14 @@ class Notes : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityNotesBinding
+    private var onlineNotes:ArrayList<Note> = ArrayList()
+    private var finished = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         UpdateColors.updateBars(this)
-        PublicShared.web=getSharedPreferences("web", MODE_PRIVATE)
+        PublicShared.web = getSharedPreferences("web", MODE_PRIVATE)
         binding = ActivityNotesBinding.inflate(layoutInflater)
         val webPref = getSharedPreferences("web", MODE_PRIVATE)
         val token = webPref.getString("token", "")
@@ -49,7 +51,7 @@ class Notes : AppCompatActivity() {
         checkOnline(token.toString(), server.toString())
         try {
             TestersApi().checkVersion(this)
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
@@ -58,15 +60,22 @@ class Notes : AppCompatActivity() {
         val notes = ArrayList<Note>()
         val welcomedPref = getSharedPreferences("main", MODE_PRIVATE)
         val welcomed = welcomedPref.getBoolean("welcomed", false)
-        if(!welcomed) {startActivity(Intent(this, Welcome::class.java)); finish()}
-        for(note in preferences.all.entries) {
-            if(!note.key.toString().equals("selected")) notes.add(Note(note.key.toString(), note.value.toString()))
+        if (!welcomed) {
+            startActivity(Intent(this, Welcome::class.java)); finish()
+        }
+        for (note in preferences.all.entries) {
+            if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
+                Note(
+                    note.key.toString(),
+                    note.value.toString()
+                )
+            )
         }
         setContentView(binding.root)
         val recyclerView = findViewById<RecyclerView>(R.id.notes)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = NotesRecyclerAdapter(notes)
-        findViewById<Button>(R.id.webtimed).setOnClickListener{
+        findViewById<Button>(R.id.webtimed).setOnClickListener {
             startActivity(Intent(this, WebInfo::class.java))
             finish()
         }
@@ -75,9 +84,26 @@ class Notes : AppCompatActivity() {
             startActivity(Intent(this, EditActivity::class.java))
             finish()
         }
+        Thread {
+            val auth = WebUtils.checkAuth(token, server)
+            Log.d("check auth", auth.toString())
+            if (auth) {
+                Thread {
+                    Log.d("reached", "reached")
+                    getOnlineNotes(webPref)
+                    while (!finished) {
+                        Thread.sleep(100)
+                    }
+                    notes.addAll(onlineNotes)
+                    runOnUiThread {
+                        recyclerView.adapter = NotesRecyclerAdapter(notes)
+                    }
+                }.start()
+            }
+        }.start()
     }
 
-    private fun getOnlineNotes(preferences:SharedPreferences) {
+    private fun getOnlineNotes(preferences:SharedPreferences){
         val token = preferences.getString("token", "")
         val server = preferences.getString("server", "")
         val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
@@ -127,8 +153,26 @@ class Notes : AppCompatActivity() {
                     note.encryption=noteObject.get("encryption").asInt
                     note.description="Web note"
                     note.online=true
+                    notes.add(note)
                 }
+                onlineNotes = notes
+            } else {
+                Log.d("fetch notes", "Error: $body")
+                Thread{
+                    for (i in 1..252) {
+                        runOnUiThread {
+                            bar.progress = 0
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
+                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
+                            } else {
+                                bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
+                            }
+                        }
+                        Thread.sleep(10)
+                    }
+                }.start()
             }
+            finished = true
         }.start()
     }
 
@@ -141,6 +185,7 @@ class Notes : AppCompatActivity() {
                     bar.isIndeterminate = false
                     bar.max = 3
                     bar.progress = 1
+
                 } else {
                     bar.isIndeterminate=false
                     bar.max=1
@@ -181,16 +226,22 @@ class Notes : AppCompatActivity() {
                     if(local.tag.equals("online")){
                         Log.d("delete note", "Attempting to delete note $name online")
                         Thread {
-                            val response = OkHttpClient().newCall(Request.Builder().url(PublicShared.web.getString("server", "") + "/api/notes/delete?note=$name").build()).execute()
+                            val response = OkHttpClient().newCall(Request.Builder().url(PublicShared.web.getString("server", "") + "/api/notes/delete?note=$name").addHeader("token", PublicShared.web.getString("token", "").toString()).build()).execute()
                             val code = response.code
-                            val body = response.body
+                            val body = response.body?.string()
                             Log.d("delete note", "Received code $code")
                             response.close()
                             if(code==200) {
                                 PublicShared.restart()
                             } else {
                                 Log.d("Delete note", "Error body: $body")
-                                Toast.makeText(PublicShared.activity, "Failed to delete note", Toast.LENGTH_LONG).show()
+                                PublicShared.activity.runOnUiThread {
+                                    Toast.makeText(
+                                        PublicShared.activity,
+                                        "Failed to delete note",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         }.start()
                     } else {
@@ -205,9 +256,12 @@ class Notes : AppCompatActivity() {
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             holder.nameText.text = notes[position].name
             holder.descriptionText.text = notes[position].description
-            if(notes[position].online) holder.local.setBackgroundResource(R.drawable.web) else holder.local.setBackgroundResource(R.drawable.local)
+            Log.d("note parsing", "Parsing note " + notes[position].name + ": " + notes[position].online)
+            if(notes[position].online) holder.local.setImageResource(R.drawable.web) else holder.local.setBackgroundResource(R.drawable.local)
+            if(notes[position].online) holder.local.tag="online"
             holder.itemView.setOnClickListener {
                 PublicShared.preferences.edit().putString("selected", holder.nameText.text.toString()).apply()
+                if(notes[position].online) PublicShared.preferences.edit().putBoolean("isOnline", true).apply() else PublicShared.preferences.edit().putBoolean("isOnline", false).apply()
                 PublicShared.activity.startActivity(Intent(PublicShared.activity, EditActivity::class.java))
                 PublicShared.activity.finish()
             }

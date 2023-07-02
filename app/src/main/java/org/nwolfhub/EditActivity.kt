@@ -11,10 +11,17 @@ import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.google.gson.JsonParser
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.lang.Exception
 
 
 class EditActivity : AppCompatActivity() {
@@ -24,6 +31,7 @@ class EditActivity : AppCompatActivity() {
     private var prevName = "newNote"
     private lateinit var preferences:SharedPreferences
     private lateinit var selected:String
+    private var online = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
@@ -39,8 +47,45 @@ class EditActivity : AppCompatActivity() {
         val cache = getSharedPreferences("cache", MODE_PRIVATE)
         val settings = getSharedPreferences("settings", MODE_PRIVATE)
         val autoSave = settings.getBoolean("autosave", false)
+        online = preferences.getBoolean("isOnline", false)
+        if(online) {
+            noteText.isEnabled=false
+            if(!selected.equals("newNote")) {
+                Log.d("fetch online note", "Getting note from server")
+                Thread {
+                    val response = OkHttpClient().newCall(
+                        Request.Builder().url(
+                            PublicShared.web.getString(
+                                "server",
+                                ""
+                            ) + "/api/notes/get?name=$selected"
+                        ).addHeader("token", PublicShared.web.getString("token", "").toString())
+                            .build()
+                    ).execute()
+                    val code = response.code
+                    val body = response.body?.string()
+                    Log.d("fetch online note", "Received code $code")
+                    response.close()
+                    if(code==200) {
+                        runOnUiThread {
+                            noteText.text=JsonParser.parseString(body).asJsonObject.get("note").asString
+                            noteText.isEnabled=true
+                        }
+                    } else {
+                        Log.d("fetch online note",  "Error: $body")
+                        runOnUiThread {
+                            startActivity(Intent(this, Notes::class.java))
+                            finish()
+                        }
+                    }
+                }.start()
+                prevName = selected
+                noteName.text=selected
+            } else {nameModified=true;noteText.isEnabled=true}
+        } else {
+            if(!selected.equals("newNote")) {noteName.text=selected;noteText.text=preferences.getString(selected, ""); prevName = selected} else nameModified=true
+        }
         UpdateColors.updateColors(this, findViewById(R.id.mainEditLayout), save, noteName, noteText)
-        if(!selected.equals("newNote")) {noteName.text=selected;noteText.text=preferences.getString(selected, ""); prevName = selected} else nameModified=true
         if(cache.contains(selected)) {
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Cached data found").setMessage("Cached data was found. Do you want to recover it?").setPositiveButton("Yes") { _, _ -> noteText.text = cache.getString(selected, "")}.setNegativeButton("No"){_, _ -> cache.edit().remove(selected).apply()}
@@ -75,13 +120,7 @@ class EditActivity : AppCompatActivity() {
             override fun afterTextChanged(p0: Editable?) {}
         })
         save.setOnClickListener {
-            Log.d("saveInfo", "Modified: $nameModified, prev: $prevName")
-            if (nameModified && prevName != "newNote") preferences.edit().remove(prevName).putString(noteName.text.toString(), noteText.text.toString()).apply()
-            else preferences.edit().putString(noteName.text.toString(), noteText.text.toString()).apply()
-            preferences.edit().putString("selected", "newNote").apply()
-            cache.edit().remove(selected).apply()
-            startActivity(Intent(this, Notes::class.java))
-            finish()
+            save()
         }
     }
 
@@ -91,14 +130,7 @@ class EditActivity : AppCompatActivity() {
             "Yes"
         ){_, _ ->
             run {
-                if (nameModified && prevName != "newNote") preferences.edit().remove(prevName)
-                    .putString(noteName.text.toString(), noteText.text.toString()).apply()
-                else preferences.edit()
-                    .putString(noteName.text.toString(), noteText.text.toString()).apply()
-                preferences.edit().putString("selected", "newNote").apply()
-                cache.edit().remove(selected).apply()
-                startActivity(Intent(this, Notes::class.java))
-                finish()
+                save()
             }
         }.setNegativeButton("No") { _, _ ->
             run {
@@ -109,5 +141,53 @@ class EditActivity : AppCompatActivity() {
         }.show()
     }
 
+    private fun save() {
+        if(online) {
+            val btn = findViewById<Button>(R.id.save)
+            val name = findViewById<EditText>(R.id.noteNameEdit)
+            val text = findViewById<EditText>(R.id.noteText)
+            btn.isEnabled=false; name.isEnabled=false;text.isEnabled=false
+            val noteName = name.text.toString()
+            val noteText = text.text.toString()
+            Log.d("save online note", "Saving note $noteName server " + PublicShared.web.getString("server", ""))
+            Thread {
+                val client = OkHttpClient()
+                try {
+                    val response = client.newCall(Request.Builder().url(PublicShared.web.getString("server", "") + "/api/notes/set?name=$noteName").post(noteText.toRequestBody()).addHeader("token", PublicShared.web.getString("token", "").toString()).build()).execute()
+                    val code = response.code
+                    val body = response.body?.string()
+                    response.close()
+                    Log.d("save online note", "Received code $code")
+                    if(code==200) {
+                        runOnUiThread { 
+                            startActivity(Intent(this, Notes::class.java))
+                            finish()
+                        }
+                    } else {
+                        btn.isEnabled=true; name.isEnabled=true;text.isEnabled=true
+                        Log.d("save online note", "Received error: $body")
+                        runOnUiThread {
+                            Toast.makeText(this, "Failed to save note!", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } catch (e:Exception) {
+                    Log.d("save online note", "Exception occurred: $e")
+                    btn.isEnabled=true; name.isEnabled=true;text.isEnabled=true
+                    Toast.makeText(this, "Failed to save note!", Toast.LENGTH_LONG).show()
+                }
+            }.start()
+        } else {
+            val cache = getSharedPreferences("cache", MODE_PRIVATE)
+            Log.d("saveInfo", "Modified: $nameModified, prev: $prevName")
+            if (nameModified && prevName != "newNote") preferences.edit().remove(prevName)
+                .putString(noteName.text.toString(), noteText.text.toString()).apply()
+            else preferences.edit().putString(noteName.text.toString(), noteText.text.toString())
+                .apply()
+            preferences.edit().putString("selected", "newNote").apply()
+            cache.edit().remove(selected).apply()
+            startActivity(Intent(this, Notes::class.java))
+            finish()
+        }
+    }
 
 }

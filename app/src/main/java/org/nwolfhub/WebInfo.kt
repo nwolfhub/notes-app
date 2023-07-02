@@ -50,7 +50,7 @@ class WebInfo : AppCompatActivity() {
                     prevText = userInfo.text.toString()
                     logout.isEnabled=true
                 }
-                Utils.typeText(prevText, true, "", "Signed in online on " + preferences.getString("server", "") + " as $username", 70, 65, 0, object: TextAction() {
+                Utils.typeText(prevText, true, "", "Signed in online on " + preferences.getString("server", "") + " as $username", 50, 40, 100, object: TextAction() {
                     override fun applyText(text: String?) {
                         runOnUiThread {
                             userInfo.setText(text)

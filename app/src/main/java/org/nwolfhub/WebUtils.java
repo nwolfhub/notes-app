@@ -42,7 +42,11 @@ public class WebUtils {
         try {
             Response response = client.newCall(new Request.Builder().url(server + "/api/users/checkAuth").get().addHeader("token", token).build()).execute();
             int code = response.code();
+            String body = response.body() != null ? response.body().string() : null;
             response.close();
+            if(body!=null && code != 200) {
+                Log.d("Check auth result", body);
+            }
             return code == 200;
         } catch (Exception ignored) {
             return false;
