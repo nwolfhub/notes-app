@@ -7,7 +7,7 @@ import android.util.Log
 class TestersApi {
     fun checkVersion(context: Context) {
         val version:String = BuildConfig.VERSION_NAME
-        val pref = context.getSharedPreferences("testers", MODE_PRIVATE)
+        val pref = context.getSharedPreferences("updates", MODE_PRIVATE)
         Log.d("testers api", "Last version: " + pref.getString("lastVer", "") + ", new version: $version")
         if(!pref.getString("lastVer", "").equals(version)) {
             pref.edit().putString("lastVer", version).apply()

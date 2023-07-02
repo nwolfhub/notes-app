@@ -4,6 +4,9 @@ public class Note {
     public String name;
     public String description;
 
+    public int encryption = 0;
+    public boolean online = false;
+
     public Note() {
     }
 
@@ -26,5 +29,21 @@ public class Note {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getEncryption() {
+        return encryption;
+    }
+
+    public void setEncryption(int encryption) {
+        this.encryption = encryption;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
     }
 }

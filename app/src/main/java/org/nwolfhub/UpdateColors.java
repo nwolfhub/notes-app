@@ -1,5 +1,6 @@
 package org.nwolfhub;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 
@@ -53,6 +55,16 @@ public class UpdateColors {
                     ((EditText) view).setTextColor(Color.parseColor("#000000"));
                 }
             }
+        }
+    }
+
+    public static void updateBars(AppCompatActivity activity) {
+        activity.getSupportActionBar().hide();
+        int mode = activity.getResources().getConfiguration().uiMode;
+        if(mode == 33 || mode==32) {
+            activity.getWindow().setStatusBarColor(Color.parseColor("#000000"));
+        } else {
+            activity.getWindow().setStatusBarColor(Color.parseColor("#FFFFFF"));
         }
     }
 }

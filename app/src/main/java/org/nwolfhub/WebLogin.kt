@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.KeyEvent
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -245,6 +246,7 @@ class WebLogin : AppCompatActivity() {
         spinner.adapter=spinnerArrayAdapter
         //Thread {animate(loginButton)}.start(); Thread{animate(registerButton)}.start()
         UpdateColors.updateColors(this, registerButton, loginButton, selector, secondLayout, returnButton, proceedLogin, findViewById(R.id.webLoginMainView))
+        UpdateColors.updateBars(this)
         var selected = 0 //0 - nothing, 1 - login, 2 - register
         secondLayout.visibility = View.GONE
         selector.visibility=View.VISIBLE
@@ -275,20 +277,41 @@ class WebLogin : AppCompatActivity() {
             loginButton.isClickable=false
             registerButton.isClickable=false
             returnButton.isClickable=false
-            username.setText("")
-            password.setText("")
             Handler(Looper.getMainLooper()).postDelayed({
                 loginButton.isClickable=true
                 registerButton.isClickable=true
+                username.setText("")
+                password.setText("")
             }, 800)
             playAnimation(secondLayout, selector)
+        }
+        password.setOnKeyListener { view, i, keyEvent ->
+            if(i==KeyEvent.KEYCODE_ENTER && keyEvent.action==KeyEvent.ACTION_UP) {
+                when(selected) {
+                    1 -> {
+                        login(username.text.toString(), password.text.toString(), servers[(spinner.selectedItem as String).toString()].toString(), listOf(proceedLogin, returnButton), client)
+                    }
+                    2-> {
+                        register(username.text.toString(), password.text.toString(), servers[(spinner.selectedItem as String).toString()].toString(), listOf(proceedLogin, returnButton), client)
+                    }
+                }
+            }
+            false
         }
         proceedLogin.setOnClickListener {
             when(selected) {
                 1 -> {
                     login(username.text.toString(), password.text.toString(), servers[(spinner.selectedItem as String).toString()].toString(), listOf(proceedLogin, returnButton), client)
                 }
+                2-> {
+                    register(username.text.toString(), password.text.toString(), servers[(spinner.selectedItem as String).toString()].toString(), listOf(proceedLogin, returnButton), client)
+                }
             }
         }
+    }
+
+    override fun onBackPressed() {
+        startActivity(Intent(this, Notes::class.java))
+        finish()
     }
 }

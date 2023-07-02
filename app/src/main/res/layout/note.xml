@@ -16,10 +16,29 @@
 
     <TextView
         android:id="@+id/noteDescription"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="15dp"
         android:text="Text"
         android:textSize="11sp"
-        app:layout_constraintTop_toBottomOf="@id/noteName"/>
+        app:layout_constraintEnd_toStartOf="@+id/onlineStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/noteName" />
+
+    <ImageView
+        android:id="@+id/onlineStatus"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toTopOf="@id/someSpace"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/local" />
+
+    <Space
+        android:id="@+id/someSpace"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

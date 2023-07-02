@@ -29,6 +29,7 @@ class EditActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit)
         window.statusBarColor = Color.parseColor("#000000")
         supportActionBar?.hide()
+        UpdateColors.updateBars(this)
         this.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE); //I don't care if it is deprecated or not. Fuck the person who thought that replacing this with a fuckton of code is a great idea
         preferences = getSharedPreferences("notes", MODE_PRIVATE)
         val save = findViewById<Button>(R.id.save)
