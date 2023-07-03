@@ -159,7 +159,9 @@ class EditActivity : AppCompatActivity() {
                     response.close()
                     Log.d("save online note", "Received code $code")
                     if(code==200) {
-                        runOnUiThread { 
+                        runOnUiThread {
+                            val cache = getSharedPreferences("cache", MODE_PRIVATE)
+                            cache.edit().clear().apply()
                             startActivity(Intent(this, Notes::class.java))
                             finish()
                         }

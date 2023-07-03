@@ -19,6 +19,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
@@ -29,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.databinding.ActivityNotesBinding
 import java.lang.Exception
 
@@ -222,33 +224,176 @@ class Notes : AppCompatActivity() {
             ) {
                 menu?.setHeaderTitle("Select action")
                 menu?.add(("Delete"))?.setOnMenuItemClickListener { // TODO: Add confirmation dialog
-                    val name = nameText.text.toString()
-                    if(local.tag.equals("online")){
-                        Log.d("delete note", "Attempting to delete note $name online")
+                    AlertDialog.Builder(PublicShared.activity).setTitle("Are you sure that you want to delete this note?").setPositiveButton("yes") {_, _ ->
+                        val name = nameText.text.toString()
+                        if (local.tag.equals("online")) {
+                            PublicShared.activity.runOnUiThread {
+                                PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled =
+                                    false
+                            }
+                            Log.d("delete note", "Attempting to delete note $name online")
+                            Thread {
+                                try {
+                                    val response = OkHttpClient().newCall(
+                                        Request.Builder().url(
+                                            PublicShared.web.getString(
+                                                "server",
+                                                ""
+                                            ) + "/api/notes/delete?note=$name"
+                                        ).addHeader(
+                                            "token",
+                                            PublicShared.web.getString("token", "").toString()
+                                        ).build()
+                                    ).execute()
+                                    val code = response.code
+                                    val body = response.body?.string()
+                                    Log.d("delete note", "Received code $code")
+                                    response.close()
+                                    if (code == 200) {
+                                        PublicShared.restart()
+                                    } else {
+                                        Log.d("Delete note", "Error body: $body")
+                                        PublicShared.activity.runOnUiThread {
+                                            Toast.makeText(
+                                                PublicShared.activity,
+                                                "Failed to delete note",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                } catch (_: Exception) {
+                                    PublicShared.activity.runOnUiThread {
+                                        PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled =
+                                            true
+                                    }
+                                }
+                            }.start()
+                        } else {
+                            PublicShared.preferences.edit().remove(nameText.text.toString()).apply()
+                            PublicShared.restart()
+                        }
+                    }.setNegativeButton("No") {i, _ -> i.dismiss()}.show()
+                    true
+                }
+                if(local.tag.equals("online")) {
+                    menu?.add("Download note")?.setOnMenuItemClickListener {
                         Thread {
-                            val response = OkHttpClient().newCall(Request.Builder().url(PublicShared.web.getString("server", "") + "/api/notes/delete?note=$name").addHeader("token", PublicShared.web.getString("token", "").toString()).build()).execute()
-                            val code = response.code
-                            val body = response.body?.string()
-                            Log.d("delete note", "Received code $code")
-                            response.close()
-                            if(code==200) {
-                                PublicShared.restart()
+                            if (WebUtils.checkAuth(
+                                    PublicShared.web.getString("token", ""),
+                                    PublicShared.web.getString("server", "")
+                                )
+                            ) {
+                                Log.d("download note", "Downloading note " + nameText.text)
+                                PublicShared.activity.runOnUiThread {
+                                    PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled =
+                                        false
+                                }
+                                val name = nameText.text.toString()
+                                Thread {
+                                    val response = OkHttpClient().newCall(
+                                        Request.Builder().url(
+                                            PublicShared.web.getString(
+                                                "server",
+                                                ""
+                                            ) + "/api/notes/get?name=$name"
+                                        ).addHeader(
+                                            "token",
+                                            PublicShared.web.getString("token", "").toString()
+                                        ).build()
+                                    ).execute()
+                                    val code = response.code
+                                    val body = response.body?.string()
+                                    response.close()
+                                    Log.d("download note", "Received code $code")
+                                    if (code == 200) {
+                                        PublicShared.preferences.edit().putString(
+                                            name,
+                                            JsonParser.parseString(body).asJsonObject.get("note").asString
+                                        ).apply()
+                                        PublicShared.restart()
+                                    } else {
+                                        Log.d("download note", "Error body: $body")
+                                        PublicShared.activity.runOnUiThread {
+                                            Toast.makeText(
+                                                PublicShared.activity,
+                                                "Failed to download note",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled =
+                                                true
+                                        }
+                                    }
+                                }.start()
                             } else {
-                                Log.d("Delete note", "Error body: $body")
                                 PublicShared.activity.runOnUiThread {
                                     Toast.makeText(
                                         PublicShared.activity,
-                                        "Failed to delete note",
-                                        Toast.LENGTH_LONG
+                                        "You are offline",
+                                        Toast.LENGTH_SHORT
                                     ).show()
                                 }
                             }
                         }.start()
-                    } else {
-                        PublicShared.preferences.edit().remove(nameText.text.toString()).apply()
-                        PublicShared.restart()
+                        true
                     }
-                    true
+                } else {
+                    menu?.add("Upload note")?.setOnMenuItemClickListener {
+                        Thread{
+                            if (WebUtils.checkAuth(
+                                    PublicShared.web.getString("token", ""),
+                                    PublicShared.web.getString("server", "")
+                                )
+                            ) {
+                                Log.d("upload note", "Uploading note " + nameText.text)
+                                PublicShared.activity.runOnUiThread {
+                                    PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled =
+                                        false
+                                }
+                                val name = nameText.text.toString()
+                                Thread {
+                                    val response = OkHttpClient().newCall(
+                                        Request.Builder().url(
+                                            PublicShared.web.getString(
+                                                "server",
+                                                ""
+                                            ) + "/api/notes/set?name=$name"
+                                        ).addHeader(
+                                            "token",
+                                            PublicShared.web.getString("token", "").toString()
+                                        ).post(
+                                            PublicShared.preferences.getString(name, "").toString().toRequestBody()
+                                        ).build()
+                                    ).execute()
+                                    val code = response.code
+                                    val body = response.body?.string()
+                                    response.close()
+                                    Log.d("upload note", "Received code $code")
+                                    if (code == 200) {
+                                        PublicShared.restart()
+                                    } else {
+                                        Log.d("upload note", "Error body: $body")
+                                        PublicShared.activity.runOnUiThread {
+                                            Toast.makeText(
+                                                PublicShared.activity,
+                                                "Failed to upload note",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            PublicShared.activity.findViewById<RecyclerView>(R.id.notes).isEnabled = true
+                                        }
+                                    }
+                                }.start()
+                            } else {
+                                PublicShared.activity.runOnUiThread {
+                                    Toast.makeText(
+                                        PublicShared.activity,
+                                        "You are offline",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }.start()
+                        true
+                    }
                 }
             }
         }
@@ -258,7 +403,7 @@ class Notes : AppCompatActivity() {
             holder.descriptionText.text = notes[position].description
             Log.d("note parsing", "Parsing note " + notes[position].name + ": " + notes[position].online)
             if(notes[position].online) holder.local.setImageResource(R.drawable.web) else holder.local.setBackgroundResource(R.drawable.local)
-            if(notes[position].online) holder.local.tag="online"
+            if(notes[position].online) holder.local.tag="online" else holder.local.tag="offline"
             holder.itemView.setOnClickListener {
                 PublicShared.preferences.edit().putString("selected", holder.nameText.text.toString()).apply()
                 if(notes[position].online) PublicShared.preferences.edit().putBoolean("isOnline", true).apply() else PublicShared.preferences.edit().putBoolean("isOnline", false).apply()
