@@ -10,6 +10,8 @@ import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -243,12 +245,44 @@ class WebLogin : AppCompatActivity() {
         val password:EditText = findViewById(R.id.passwordLogin)
         val client = OkHttpClient()
         val spinner:Spinner = findViewById(R.id.serverSelector)
+        val serversPref = getSharedPreferences("servers", MODE_PRIVATE)
         secondLayout.alpha=0f
+        PublicShared.counter=0
         val servers = HashMap<String, String>()
-        servers["Nwolfhub (official)"] = "https://notes.nwolfhub.org"
+        PublicShared.webActivity = this
+        servers["servers"]="";
+        for(server in PublicShared.buildServersList(serversPref)) {
+            servers[server.name] = server.url
+        }
         val spinnerArrayAdapter = ArrayAdapter(
             this, android.R.layout.simple_spinner_item, servers.keys.stream().collect(Collectors.toList())
         )
+        spinner.post {
+            spinner.setSelection(spinnerArrayAdapter.getPosition("Nwolfhub (official)"))
+        }
+        spinner.onItemSelectedListener = object: OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                if ((spinner.selectedItem as String).equals("servers")) {
+                    PublicShared.counter++
+                    if(PublicShared.counter>0) {
+                        PublicShared.webActivity.runOnUiThread {
+                            startActivity(
+                                Intent(
+                                    PublicShared.webActivity,
+                                    ServerManageActivity::class.java
+                                )
+                            )
+                            finish()
+                        }
+                    }
+                }
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+
+        }
         spinner.adapter=spinnerArrayAdapter
         //Thread {animate(loginButton)}.start(); Thread{animate(registerButton)}.start()
         UpdateColors.updateColors(this, registerButton, loginButton, selector, secondLayout, returnButton, proceedLogin, findViewById(R.id.webLoginMainView))

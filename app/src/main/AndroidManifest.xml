@@ -19,6 +19,9 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
+            android:name=".ServerManageActivity"
+            android:exported="false" />
+        <activity
             android:name=".EasterActivity"
             android:exported="false" />
         <activity

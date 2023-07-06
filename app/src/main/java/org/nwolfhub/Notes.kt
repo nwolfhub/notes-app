@@ -62,6 +62,11 @@ class Notes : AppCompatActivity() {
         val notes = ArrayList<Note>()
         val welcomedPref = getSharedPreferences("main", MODE_PRIVATE)
         val welcomed = welcomedPref.getBoolean("welcomed", false)
+        val serversPreferences = getSharedPreferences("servers", MODE_PRIVATE)
+        if(serversPreferences.getString("servers", "").equals("")) {
+            serversPreferences.edit().putString("servers", "Nwolfhub (official)").putString("Nwolfhub (official)", "https://notes.nwolfhub.org").apply()
+            Log.d("servers scan", "No servers were found, added Nwolfhub to list")
+        }
         if (!welcomed) {
             startActivity(Intent(this, Welcome::class.java)); finish()
         }
@@ -82,7 +87,7 @@ class Notes : AppCompatActivity() {
             finish()
         }
         binding.fab.setOnClickListener {
-            preferences.edit().putString("selected", "newNote").apply()
+            preferences.edit().putString("selected", "newNote").putBoolean("isOnline", false).apply()
             startActivity(Intent(this, EditActivity::class.java))
             finish()
         }
