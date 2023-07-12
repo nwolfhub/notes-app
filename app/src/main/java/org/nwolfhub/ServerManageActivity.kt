@@ -10,6 +10,7 @@ import android.view.View
 import android.view.View.OnCreateContextMenuListener
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -74,11 +75,35 @@ class ServerManageActivity : AppCompatActivity() {
                     }
                 }
             }
+            holder.itemView.setOnLongClickListener {
+                if(holder.serverName.text.toString() != "Nwolfhub (official)") {
+                    AlertDialog.Builder(PublicShared.serverManageActivity)
+                        .setTitle("Do you want to delete this server?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            Log.d(
+                                "server deletion",
+                                "Deleting server " + holder.serverName.text.toString()
+                            )
+                            val pref = PublicShared.serverManageActivity.getSharedPreferences(
+                                "servers",
+                                MODE_PRIVATE
+                            )
+                            pref.edit().remove(holder.serverName.text.toString()).apply()
+                            PublicShared.serverManageActivity.restart()
+                        }.setNegativeButton("No") { _, _ -> }.show()
+                }
+                true
+            }
         }
     }
 
     override fun onBackPressed() {
         startActivity(Intent(this, WebLogin::class.java))
+        finish()
+    }
+
+    fun restart() {
+        startActivity(Intent(this, ServerManageActivity::class.java))
         finish()
     }
 }

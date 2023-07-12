@@ -51,6 +51,17 @@
             android:exported="false"
             android:label="@string/title_activity_notes"
             android:theme="@style/Theme.Notes" />
+        <service
+            android:name=".PowerEasterService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@drawable/ic_launcher_foreground" />
+        </service>
     </application>
 
 </manifest>

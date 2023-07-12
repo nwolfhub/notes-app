@@ -1,7 +1,6 @@
 package org.nwolfhub;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.Editable;
@@ -13,7 +12,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class PublicShared {
@@ -38,8 +36,8 @@ public class PublicShared {
     public static List<Server> buildServersList(SharedPreferences preferences) {
         String rawData = preferences.getString("servers", "");
         List<Server> servers = new ArrayList<>();
-        for(String server:rawData.split(";")) {
-            servers.add(new Server(server, preferences.getString(server, "")));
+        for(String server:preferences.getAll().keySet()) {
+            if(!server.equals("servers")) servers.add(new Server(server, preferences.getString(server, "")));
         }
         return servers;
     }
@@ -60,6 +58,7 @@ public class PublicShared {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if(nameEdit.getText().toString().equals("servers")) nameEdit.setText("server");
+                if(nameEdit.getText().toString().equals("Add new")) nameEdit.setText("smart fella fart smella");
                 while(nameEdit.getText().toString().contains(";")) nameEdit.setText(nameEdit.getText().toString().substring(0, nameEdit.length()-1));
             }
 
@@ -74,10 +73,15 @@ public class PublicShared {
             if(name.equals("") || url.equals("")) {
                 Toast.makeText(serverManageActivity, "Either url or name is empty!", Toast.LENGTH_SHORT).show();
             } else {
-                Log.d("server save", "Saving server " + name + " with url " + url);
-                preferences.edit().putString(name, url).putString("servers", preferences.getString("servers", "") + ";" + name).apply();
-                serverManageActivity.startActivity(new Intent(serverManageActivity, WebLogin.class));
-                serverManageActivity.finish();
+                if(prevName.equals("Nwolfhub (official)") || name.equals("Nwolfhub (official)")) {
+                    Toast.makeText(serverManageActivity, "Editing official server is not allowed", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d("server save", "Saving server " + name + " with url " + url);
+                    if (!prevName.equals("")) preferences.edit().remove(prevName).apply();
+                    preferences.edit().putString(name, url).putString("servers", preferences.getString("servers", "") + ";" + name).apply();
+                    serverManageActivity.startActivity(new Intent(serverManageActivity, WebLogin.class));
+                    serverManageActivity.finish();
+                }
             }
         }).create();
     }

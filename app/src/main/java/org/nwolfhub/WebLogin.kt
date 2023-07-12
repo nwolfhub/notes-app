@@ -1,6 +1,7 @@
 package org.nwolfhub
 
 import android.R.attr.data
+import android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_POWER_DIALOG
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.Color
@@ -246,13 +247,25 @@ class WebLogin : AppCompatActivity() {
         val client = OkHttpClient()
         val spinner:Spinner = findViewById(R.id.serverSelector)
         val serversPref = getSharedPreferences("servers", MODE_PRIVATE)
+        val welcomeToWeb:TextView = findViewById(R.id.welcomeToWeb)
+        var now = 0
+        welcomeToWeb.setOnClickListener {
+            if(now++>=10) {
+                now=0
+                PowerEasterService().execute()
+            }
+        }
         secondLayout.alpha=0f
         PublicShared.counter=0
         val servers = HashMap<String, String>()
         PublicShared.webActivity = this
         servers["servers"]="";
-        for(server in PublicShared.buildServersList(serversPref)) {
-            servers[server.name] = server.url
+        for(serverRaw in serversPref.all.keys) {
+            if(!serverRaw.equals("servers")) { //I am too lazy to refactor code and fully remove this shitcode rn so Il do it later I promise
+                val server =
+                    Server(serverRaw.toString(), serversPref.getString(serverRaw.toString(), ""))
+                servers[server.name.toString()] = server.url
+            }
         }
         val spinnerArrayAdapter = ArrayAdapter(
             this, android.R.layout.simple_spinner_item, servers.keys.stream().collect(Collectors.toList())
@@ -279,7 +292,7 @@ class WebLogin : AppCompatActivity() {
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
-                TODO("Not yet implemented")
+
             }
 
         }
