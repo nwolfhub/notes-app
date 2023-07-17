@@ -52,6 +52,7 @@ class EditActivity : AppCompatActivity() {
             noteText.isEnabled=false
             if(!selected.equals("newNote")) {
                 Log.d("fetch online note", "Getting note from server")
+                save.isEnabled=false
                 Thread {
                     val response = OkHttpClient().newCall(
                         Request.Builder().url(
@@ -70,6 +71,7 @@ class EditActivity : AppCompatActivity() {
                         runOnUiThread {
                             noteText.text=JsonParser.parseString(body).asJsonObject.get("note").asString
                             noteText.isEnabled=true
+                            save.isEnabled=true
                         }
                     } else {
                         Log.d("fetch online note",  "Error: $body")
