@@ -3,9 +3,7 @@ package org.nwolfhub
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.ColorStateList
-import android.graphics.BlendModeColorFilter
 import android.graphics.Color
-import android.graphics.ColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -32,6 +30,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.databinding.ActivityNotesBinding
+import org.nwolfhub.model.Note
+import org.nwolfhub.util.TestersApi
+import org.nwolfhub.util.UpdateColors
+import org.nwolfhub.util.WebUtils
 import java.lang.Exception
 
 class Notes : AppCompatActivity() {

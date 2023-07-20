@@ -1,7 +1,5 @@
 package org.nwolfhub
 
-import android.R.attr.data
-import android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_POWER_DIALOG
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.Color
@@ -23,13 +21,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
-import com.google.gson.Gson
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.lang.Exception
+import org.nwolfhub.model.Server
+import org.nwolfhub.util.UpdateColors
 import java.util.Random
 import java.util.stream.Collectors
 import org.nwolfhub.utils.*
@@ -263,7 +260,10 @@ class WebLogin : AppCompatActivity() {
         for(serverRaw in serversPref.all.keys) {
             if(!serverRaw.equals("servers")) { //I am too lazy to refactor code and fully remove this shitcode rn so Il do it later I promise
                 val server =
-                    Server(serverRaw.toString(), serversPref.getString(serverRaw.toString(), ""))
+                    Server(
+                        serverRaw.toString(),
+                        serversPref.getString(serverRaw.toString(), "")
+                    )
                 servers[server.name.toString()] = server.url
             }
         }

@@ -4,15 +4,14 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnCreateContextMenuListener
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.nwolfhub.model.Server
 
 class ServerManageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

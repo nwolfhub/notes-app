@@ -1,4 +1,4 @@
-package org.nwolfhub;
+package org.nwolfhub.model;
 
 public class Note {
     public String name;
