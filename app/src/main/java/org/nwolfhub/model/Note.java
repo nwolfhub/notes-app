@@ -1,6 +1,8 @@
 package org.nwolfhub.model;
 
-public class Note {
+import java.io.Serializable;
+
+public class Note implements Serializable {
     public String name;
     public String description;
 

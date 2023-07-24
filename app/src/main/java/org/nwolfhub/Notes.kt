@@ -31,8 +31,10 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.databinding.ActivityNotesBinding
 import org.nwolfhub.model.Note
+import org.nwolfhub.util.Cache
 import org.nwolfhub.util.TestersApi
 import org.nwolfhub.util.UpdateColors
+import org.nwolfhub.util.WebCacher
 import org.nwolfhub.util.WebUtils
 import java.lang.Exception
 
@@ -46,6 +48,8 @@ class Notes : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+        val intentData = intent.data
+        val cacher = WebCacher(Cache(this))
         UpdateColors.updateBars(this)
         PublicShared.web = getSharedPreferences("web", MODE_PRIVATE)
         binding = ActivityNotesBinding.inflate(layoutInflater)
@@ -72,17 +76,11 @@ class Notes : AppCompatActivity() {
         if (!welcomed) {
             startActivity(Intent(this, Welcome::class.java)); finish()
         }
-        for (note in preferences.all.entries) {
-            if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
-                Note(
-                    note.key.toString(),
-                    note.value.toString()
-                )
-            )
-        }
+        notes.addAll(rebuildLocalNotesList())
         setContentView(binding.root)
         val recyclerView = findViewById<RecyclerView>(R.id.notes)
         recyclerView.layoutManager = LinearLayoutManager(this)
+        notes.addAll(cacher.getCachedNotes());
         recyclerView.adapter = NotesRecyclerAdapter(notes)
         findViewById<Button>(R.id.webtimed).setOnClickListener {
             startActivity(Intent(this, WebInfo::class.java))
@@ -93,23 +91,16 @@ class Notes : AppCompatActivity() {
             startActivity(Intent(this, EditActivity::class.java))
             finish()
         }
-        Thread {
-            val auth = WebUtils.checkAuth(token, server)
-            Log.d("check auth", auth.toString())
-            if (auth) {
-                Thread {
-                    Log.d("reached", "reached")
-                    getOnlineNotes(webPref)
-                    while (!finished) {
-                        Thread.sleep(100)
-                    }
-                    notes.addAll(onlineNotes)
-                    runOnUiThread {
-                        recyclerView.adapter = NotesRecyclerAdapter(notes)
-                    }
-                }.start()
-            }
-        }.start()
+        if(intentData==null) {
+            Thread {
+                cacher.runUpdateNotes(server.toString(), token.toString())
+                runOnUiThread {
+                    val basicNotesList = rebuildLocalNotesList()
+                    basicNotesList.addAll(cacher.getCachedNotes())
+                    recyclerView.adapter = NotesRecyclerAdapter(basicNotesList)
+                }
+            }.start()
+        }
     }
 
     private fun getOnlineNotes(preferences:SharedPreferences){
@@ -214,6 +205,19 @@ class Notes : AppCompatActivity() {
                 }
             }
         }.start()
+    }
+    private fun rebuildLocalNotesList():ArrayList<Note> {
+        val preferences = getSharedPreferences("notes", MODE_PRIVATE)
+        val notes = ArrayList<Note>()
+        for (note in preferences.all.entries) {
+            if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
+                Note(
+                    note.key.toString(),
+                    note.value.toString()
+                )
+            )
+        }
+        return notes
     }
     class NotesRecyclerAdapter(private val notes: List<Note>) :
         RecyclerView.Adapter<NotesRecyclerAdapter.MyViewHolder>() {
