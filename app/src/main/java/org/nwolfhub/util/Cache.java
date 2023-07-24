@@ -3,6 +3,8 @@ package org.nwolfhub.util;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import org.nwolfhub.model.Note;
 
 import java.io.File;
@@ -27,7 +29,7 @@ public class Cache {
 
     public void cacheOnlineNotes(List<Note> notes) {
         File cacheDir = new File(context.getCacheDir(), "notes");
-        if(!cacheDir.exists()) {
+        if(!cacheDir.isDirectory()) {
             cacheDir.mkdirs();
         }
         Log.d("Notes caching", "Caching " + notes.size() + " notes");
@@ -67,7 +69,7 @@ public class Cache {
 
     public List<Note> getCachedNotes() {
         File cacheDir = new File(context.getCacheDir(), "notes");
-        if(!cacheDir.exists()) {
+        if(!cacheDir.isDirectory()) {
             return new ArrayList<>();
         }
         else {
@@ -85,6 +87,40 @@ public class Cache {
                 }
             }
             return notes;
+        }
+    }
+
+    @Nullable
+    public Note getCachedNote(String name) {
+        File cacheDir = new File(context.getCacheDir(), "notes");
+        if (!cacheDir.isDirectory()) return null;
+        File noteFile = new File(cacheDir, name + ".note");
+        if (!noteFile.exists()) return null;
+        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(noteFile.toPath()))) {
+            return (Note) in.readObject();
+        } catch (IOException e) {
+            Log.d("Notes caching", "Could note read cached note: " + e);
+            return null;
+        } catch (ClassNotFoundException e) {
+            Log.d("Notes caching", "Corrupted note: " + noteFile.getAbsolutePath());
+            return null;
+        }
+    }
+
+    public void cacheNote(Note note) {
+        File cacheDir = new File(context.getCacheDir(), "notes");
+        if (!cacheDir.isDirectory()) cacheDir.mkdirs();
+        File noteFile = new File(cacheDir, note.getName() + ".note");
+        if(!noteFile.exists()) try {
+            noteFile.createNewFile();
+        } catch (IOException e) {
+            Log.d("Notes caching", "Failed to cache note " + note.getName() + ": " + e);
+            return;
+        }
+        try(ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(noteFile.toPath()))) {
+            out.writeObject(note);
+        } catch (IOException e) {
+            Log.d("Notes caching", "Failed to cache note " + note.getName() + ": " + e);
         }
     }
 }
