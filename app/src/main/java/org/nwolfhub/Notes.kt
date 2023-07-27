@@ -92,7 +92,6 @@ class Notes : AppCompatActivity() {
             finish()
         }
         if(intentData==null) {
-            findViewById<ProgressBar>(R.id.fetchOnlineNotes).progress=2
             Thread {
                 cacher.runUpdateNotes(server.toString(), token.toString(), this, findViewById(R.id.fetchOnlineNotes))
                 runOnUiThread {

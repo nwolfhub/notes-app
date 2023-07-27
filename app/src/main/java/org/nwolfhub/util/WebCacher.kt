@@ -12,6 +12,7 @@ import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.nwolfhub.Notes
+import org.nwolfhub.R
 import org.nwolfhub.model.Note
 
 class WebCacher(val cache: Cache) {
@@ -29,6 +30,9 @@ class WebCacher(val cache: Cache) {
     }
 
     fun runUpdateNotes(server:String, token:String, context: Notes, bar:ProgressBar) {
+        context.runOnUiThread {
+            bar.progress=2
+        }
         val client = OkHttpClient()
         val response = client.newCall(
             Request.Builder().url("$server/api/notes/getAll").addHeader("token", token).build()
