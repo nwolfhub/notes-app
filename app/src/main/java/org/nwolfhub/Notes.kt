@@ -103,79 +103,7 @@ class Notes : AppCompatActivity() {
         }
     }
 
-    private fun getOnlineNotes(preferences:SharedPreferences){
-        val token = preferences.getString("token", "")
-        val server = preferences.getString("server", "")
-        val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
-        Log.d("fetch notes", "Fetching notes from $server")
-        bar.progress = 2
-        Thread {
-            val client = OkHttpClient()
-            val response = client.newCall(Request.Builder().url("$server/api/notes/getAll").addHeader("token", token.toString()).build()).execute()
-            val code = response.code
-            val body = response.body?.string()
-            response.close()
-            Log.d("fetch notes", "Received code: $code")
-            if(code==200) {
-                runOnUiThread {
-                    bar.progress = 3
-                }
-                Thread{
-                    var r = 3
-                    var g = 218
-                    var b = 197
-                    for (i in 1..255) { //(3,218,197) -> (14, 227, 67)
-                        runOnUiThread {
-                            if(r<14) {
-                                r++
-                            }
-                            if(g<227) {
-                                g++
-                            }
-                            if(b>67) {
-                                b--
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb(r,g,b), BlendModeCompat.SRC_ATOP)
-                            } else {
-                                bar.progressTintList = ColorStateList.valueOf(Color.rgb(r,g,b))
-                            }
-                        }
-                        Thread.sleep(20)
-                    }
-                }.start()
-                val notes = ArrayList<Note>()
-                val rootElement = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
-                for (jsonObject in rootElement) {
-                    val noteObject = jsonObject.asJsonObject
-                    val note = Note()
-                    note.name=noteObject.get("name").asString
-                    note.encryption=noteObject.get("encryption").asInt
-                    note.description="Web note"
-                    note.online=true
-                    notes.add(note)
-                }
-                onlineNotes = notes
-            } else {
-                Log.d("fetch notes", "Error: $body")
-                Thread{
-                    for (i in 1..252) {
-                        runOnUiThread {
-                            bar.progress = 0
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
-                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
-                            } else {
-                                bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
-                            }
-                        }
-                        Thread.sleep(10)
-                    }
-                }.start()
-            }
-            finished = true
-        }.start()
-    }
-
+    // TODO: move this into webcache aswell. Theres no point of flooding server with requests and making race condition on bars progress
     private fun checkOnline(token:String, server:String) {
         Thread {
             val authed = WebUtils.checkAuth(token, server)
@@ -185,7 +113,6 @@ class Notes : AppCompatActivity() {
                     bar.isIndeterminate = false
                     bar.max = 3
                     bar.progress = 1
-
                 } else {
                     bar.isIndeterminate=false
                     bar.max=1
@@ -430,5 +357,79 @@ class Notes : AppCompatActivity() {
                 .inflate(R.layout.note, parent, false)
             return MyViewHolder(itemView)
         }
+    }
+
+    @Deprecated("Functions moved to webCache")
+    private fun getOnlineNotes(preferences:SharedPreferences){
+        val token = preferences.getString("token", "")
+        val server = preferences.getString("server", "")
+        val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
+        Log.d("fetch notes", "Fetching notes from $server")
+        bar.progress = 2
+        Thread {
+            val client = OkHttpClient()
+            val response = client.newCall(Request.Builder().url("$server/api/notes/getAll").addHeader("token", token.toString()).build()).execute()
+            val code = response.code
+            val body = response.body?.string()
+            response.close()
+            Log.d("fetch notes", "Received code: $code")
+            if(code==200) {
+                runOnUiThread {
+                    bar.progress = 3
+                }
+                Thread{
+                    var r = 3
+                    var g = 218
+                    var b = 197
+                    for (i in 1..255) { //(3,218,197) -> (14, 227, 67)
+                        runOnUiThread {
+                            if(r<14) {
+                                r++
+                            }
+                            if(g<227) {
+                                g++
+                            }
+                            if(b>67) {
+                                b--
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb(r,g,b), BlendModeCompat.SRC_ATOP)
+                            } else {
+                                bar.progressTintList = ColorStateList.valueOf(Color.rgb(r,g,b))
+                            }
+                        }
+                        Thread.sleep(20)
+                    }
+                }.start()
+                val notes = ArrayList<Note>()
+                val rootElement = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
+                for (jsonObject in rootElement) {
+                    val noteObject = jsonObject.asJsonObject
+                    val note = Note()
+                    note.name=noteObject.get("name").asString
+                    note.encryption=noteObject.get("encryption").asInt
+                    note.description="Web note"
+                    note.online=true
+                    notes.add(note)
+                }
+                onlineNotes = notes
+            } else {
+                Log.d("fetch notes", "Error: $body")
+                Thread{
+                    for (i in 1..252) {
+                        runOnUiThread {
+                            bar.progress = 0
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
+                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
+                            } else {
+                                bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
+                            }
+                        }
+                        Thread.sleep(10)
+                    }
+                }.start()
+            }
+            finished = true
+        }.start()
     }
 }
