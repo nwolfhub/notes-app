@@ -40,14 +40,14 @@ public class Cache {
                 if (!noteFile.exists()) {
                     try {
                         noteFile.createNewFile();
+                        try(ObjectOutputStream stream = new ObjectOutputStream(Files.newOutputStream(noteFile.toPath()))) {
+                            stream.writeObject(note);
+                        } catch (IOException e) {
+                            Log.d("Notes caching", "Failed to cache note: " + note.getName() + " (" + e + ")");
+                        }
                     } catch (IOException e) {
                         Log.d("Notes caching", "Failed to cache note: " + note.getName() + " (" + e + ")");
                     }
-                }
-                try(ObjectOutputStream stream = new ObjectOutputStream(Files.newOutputStream(noteFile.toPath()))) {
-                    stream.writeObject(note);
-                } catch (IOException e) {
-                    Log.d("Notes caching", "Failed to cache note: " + note.getName() + " (" + e + ")");
                 }
             }
         }

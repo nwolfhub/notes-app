@@ -17,6 +17,12 @@ public class Note implements Serializable {
         this.description = description;
     }
 
+    public Note(String name, String description, boolean online) {
+        this.name = name;
+        this.description = description;
+        this.online = online;
+    }
+
     public String getName() {
         return name;
     }

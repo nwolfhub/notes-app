@@ -157,7 +157,7 @@ class EditActivity : AppCompatActivity() {
             val btn = findViewById<Button>(R.id.save)
             val name = findViewById<EditText>(R.id.noteNameEdit)
             val text = findViewById<EditText>(R.id.noteText)
-            WebCacher(Cache(this)).updateNote(Note(name.text.toString(), text.text.toString()))
+            WebCacher(Cache(this)).updateNote(Note(name.text.toString(), text.text.toString(), true))
             btn.isEnabled=false; name.isEnabled=false;text.isEnabled=false
             val noteName = name.text.toString()
             val noteText = text.text.toString()
