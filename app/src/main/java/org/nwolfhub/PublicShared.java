@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.nwolfhub.model.Server;
+
 import java.util.ArrayList;
 import java.util.List;
 

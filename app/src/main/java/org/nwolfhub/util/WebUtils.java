@@ -1,4 +1,4 @@
-package org.nwolfhub;
+package org.nwolfhub.util;
 
 import android.util.Log;
 

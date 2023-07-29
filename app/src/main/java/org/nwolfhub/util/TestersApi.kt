@@ -1,8 +1,9 @@
-package org.nwolfhub
+package org.nwolfhub.util
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import org.nwolfhub.BuildConfig
 
 class TestersApi {
     fun checkVersion(context: Context) {

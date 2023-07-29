@@ -1,4 +1,4 @@
-package org.nwolfhub;
+package org.nwolfhub.util;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,6 +13,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
+
+import org.nwolfhub.R;
 
 public class UpdateColors {
     public static void updateColors(Context context, View... views) {

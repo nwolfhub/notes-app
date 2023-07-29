@@ -3,9 +3,7 @@ package org.nwolfhub
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.ColorStateList
-import android.graphics.BlendModeColorFilter
 import android.graphics.Color
-import android.graphics.ColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -32,6 +30,12 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.databinding.ActivityNotesBinding
+import org.nwolfhub.model.Note
+import org.nwolfhub.util.Cache
+import org.nwolfhub.util.TestersApi
+import org.nwolfhub.util.UpdateColors
+import org.nwolfhub.util.WebCacher
+import org.nwolfhub.util.WebUtils
 import java.lang.Exception
 
 class Notes : AppCompatActivity() {
@@ -44,6 +48,8 @@ class Notes : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+        val intentData = intent.data
+        val cacher = WebCacher(Cache(this))
         UpdateColors.updateBars(this)
         PublicShared.web = getSharedPreferences("web", MODE_PRIVATE)
         binding = ActivityNotesBinding.inflate(layoutInflater)
@@ -70,17 +76,11 @@ class Notes : AppCompatActivity() {
         if (!welcomed) {
             startActivity(Intent(this, Welcome::class.java)); finish()
         }
-        for (note in preferences.all.entries) {
-            if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
-                Note(
-                    note.key.toString(),
-                    note.value.toString()
-                )
-            )
-        }
+        notes.addAll(rebuildLocalNotesList())
         setContentView(binding.root)
         val recyclerView = findViewById<RecyclerView>(R.id.notes)
         recyclerView.layoutManager = LinearLayoutManager(this)
+        notes.addAll(cacher.getCachedNotes());
         recyclerView.adapter = NotesRecyclerAdapter(notes)
         findViewById<Button>(R.id.webtimed).setOnClickListener {
             startActivity(Intent(this, WebInfo::class.java))
@@ -91,98 +91,19 @@ class Notes : AppCompatActivity() {
             startActivity(Intent(this, EditActivity::class.java))
             finish()
         }
-        Thread {
-            val auth = WebUtils.checkAuth(token, server)
-            Log.d("check auth", auth.toString())
-            if (auth) {
-                Thread {
-                    Log.d("reached", "reached")
-                    getOnlineNotes(webPref)
-                    while (!finished) {
-                        Thread.sleep(100)
-                    }
-                    notes.addAll(onlineNotes)
-                    runOnUiThread {
-                        recyclerView.adapter = NotesRecyclerAdapter(notes)
-                    }
-                }.start()
-            }
-        }.start()
-    }
-
-    private fun getOnlineNotes(preferences:SharedPreferences){
-        val token = preferences.getString("token", "")
-        val server = preferences.getString("server", "")
-        val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
-        Log.d("fetch notes", "Fetching notes from $server")
-        bar.progress = 2
-        Thread {
-            val client = OkHttpClient()
-            val response = client.newCall(Request.Builder().url("$server/api/notes/getAll").addHeader("token", token.toString()).build()).execute()
-            val code = response.code
-            val body = response.body?.string()
-            response.close()
-            Log.d("fetch notes", "Received code: $code")
-            if(code==200) {
+        if(intentData==null) {
+            Thread {
+                cacher.runUpdateNotes(server.toString(), token.toString(), this, findViewById(R.id.fetchOnlineNotes))
                 runOnUiThread {
-                    bar.progress = 3
+                    val basicNotesList = rebuildLocalNotesList()
+                    basicNotesList.addAll(cacher.getCachedNotes())
+                    recyclerView.adapter = NotesRecyclerAdapter(basicNotesList)
                 }
-                Thread{
-                    var r = 3
-                    var g = 218
-                    var b = 197
-                    for (i in 1..255) { //(3,218,197) -> (14, 227, 67)
-                        runOnUiThread {
-                            if(r<14) {
-                                r++
-                            }
-                            if(g<227) {
-                                g++
-                            }
-                            if(b>67) {
-                                b--
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb(r,g,b), BlendModeCompat.SRC_ATOP)
-                            } else {
-                                bar.progressTintList = ColorStateList.valueOf(Color.rgb(r,g,b))
-                            }
-                        }
-                        Thread.sleep(20)
-                    }
-                }.start()
-                val notes = ArrayList<Note>()
-                val rootElement = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
-                for (jsonObject in rootElement) {
-                    val noteObject = jsonObject.asJsonObject
-                    val note = Note()
-                    note.name=noteObject.get("name").asString
-                    note.encryption=noteObject.get("encryption").asInt
-                    note.description="Web note"
-                    note.online=true
-                    notes.add(note)
-                }
-                onlineNotes = notes
-            } else {
-                Log.d("fetch notes", "Error: $body")
-                Thread{
-                    for (i in 1..252) {
-                        runOnUiThread {
-                            bar.progress = 0
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
-                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
-                            } else {
-                                bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
-                            }
-                        }
-                        Thread.sleep(10)
-                    }
-                }.start()
-            }
-            finished = true
-        }.start()
+            }.start()
+        }
     }
 
+    // TODO: move this into webcache aswell. Theres no point of flooding server with requests and making race condition on bars progress
     private fun checkOnline(token:String, server:String) {
         Thread {
             val authed = WebUtils.checkAuth(token, server)
@@ -192,7 +113,6 @@ class Notes : AppCompatActivity() {
                     bar.isIndeterminate = false
                     bar.max = 3
                     bar.progress = 1
-
                 } else {
                     bar.isIndeterminate=false
                     bar.max=1
@@ -212,6 +132,19 @@ class Notes : AppCompatActivity() {
                 }
             }
         }.start()
+    }
+    private fun rebuildLocalNotesList():ArrayList<Note> {
+        val preferences = getSharedPreferences("notes", MODE_PRIVATE)
+        val notes = ArrayList<Note>()
+        for (note in preferences.all.entries) {
+            if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
+                Note(
+                    note.key.toString(),
+                    note.value.toString()
+                )
+            )
+        }
+        return notes
     }
     class NotesRecyclerAdapter(private val notes: List<Note>) :
         RecyclerView.Adapter<NotesRecyclerAdapter.MyViewHolder>() {
@@ -424,5 +357,79 @@ class Notes : AppCompatActivity() {
                 .inflate(R.layout.note, parent, false)
             return MyViewHolder(itemView)
         }
+    }
+
+    @Deprecated("Functions moved to webCache")
+    private fun getOnlineNotes(preferences:SharedPreferences){
+        val token = preferences.getString("token", "")
+        val server = preferences.getString("server", "")
+        val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
+        Log.d("fetch notes", "Fetching notes from $server")
+        bar.progress = 2
+        Thread {
+            val client = OkHttpClient()
+            val response = client.newCall(Request.Builder().url("$server/api/notes/getAll").addHeader("token", token.toString()).build()).execute()
+            val code = response.code
+            val body = response.body?.string()
+            response.close()
+            Log.d("fetch notes", "Received code: $code")
+            if(code==200) {
+                runOnUiThread {
+                    bar.progress = 3
+                }
+                Thread{
+                    var r = 3
+                    var g = 218
+                    var b = 197
+                    for (i in 1..255) { //(3,218,197) -> (14, 227, 67)
+                        runOnUiThread {
+                            if(r<14) {
+                                r++
+                            }
+                            if(g<227) {
+                                g++
+                            }
+                            if(b>67) {
+                                b--
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb(r,g,b), BlendModeCompat.SRC_ATOP)
+                            } else {
+                                bar.progressTintList = ColorStateList.valueOf(Color.rgb(r,g,b))
+                            }
+                        }
+                        Thread.sleep(20)
+                    }
+                }.start()
+                val notes = ArrayList<Note>()
+                val rootElement = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
+                for (jsonObject in rootElement) {
+                    val noteObject = jsonObject.asJsonObject
+                    val note = Note()
+                    note.name=noteObject.get("name").asString
+                    note.encryption=noteObject.get("encryption").asInt
+                    note.description="Web note"
+                    note.online=true
+                    notes.add(note)
+                }
+                onlineNotes = notes
+            } else {
+                Log.d("fetch notes", "Error: $body")
+                Thread{
+                    for (i in 1..252) {
+                        runOnUiThread {
+                            bar.progress = 0
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
+                                bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
+                            } else {
+                                bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
+                            }
+                        }
+                        Thread.sleep(10)
+                    }
+                }.start()
+            }
+            finished = true
+        }.start()
     }
 }
