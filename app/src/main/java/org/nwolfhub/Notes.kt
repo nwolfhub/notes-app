@@ -56,7 +56,6 @@ class Notes : AppCompatActivity() {
         val webPref = getSharedPreferences("web", MODE_PRIVATE)
         val token = webPref.getString("token", "")
         val server = webPref.getString("server", "")
-        checkOnline(token.toString(), server.toString())
         try {
             TestersApi().checkVersion(this)
         } catch (e: Exception) {
@@ -101,37 +100,6 @@ class Notes : AppCompatActivity() {
                 }
             }.start()
         }
-    }
-
-    // TODO: move this into webcache aswell. Theres no point of flooding server with requests and making race condition on bars progress
-    private fun checkOnline(token:String, server:String) {
-        Thread {
-            val authed = WebUtils.checkAuth(token, server)
-            runOnUiThread {
-                val bar = findViewById<ProgressBar>(R.id.fetchOnlineNotes)
-                if (authed) {
-                    bar.isIndeterminate = false
-                    bar.max = 3
-                    bar.progress = 1
-                } else {
-                    bar.isIndeterminate=false
-                    bar.max=1
-                    bar.progress=1
-                    Thread{
-                        for (i in 1..252) {
-                            runOnUiThread {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //(3,218,197) -> (255, 0, 0)
-                                    bar.progressDrawable.colorFilter=BlendModeColorFilterCompat.createBlendModeColorFilterCompat(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i), BlendModeCompat.SRC_ATOP)
-                                } else {
-                                    bar.progressTintList = ColorStateList.valueOf(Color.rgb( 3+i, if (i>218) 0 else 218-i, if (i>197) 0 else 197-i));
-                                }
-                            }
-                            Thread.sleep(10)
-                        }
-                    }.start()
-                }
-            }
-        }.start()
     }
     private fun rebuildLocalNotesList():ArrayList<Note> {
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
