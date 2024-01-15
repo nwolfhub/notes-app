@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -11,20 +11,21 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.nwolfhub.model.Server
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.model.Server
 
 class ServerManageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_server_manage)
-        PublicShared.serverManageActivity=this
+        PublicShared.serverManageActivity =this
         val recyclerView:RecyclerView = findViewById(R.id.serversRecycler)
         val preferences = getSharedPreferences("servers", MODE_PRIVATE)
         val list = PublicShared.buildServersList(preferences)
         list.add(Server("Add new", ""))
         Log.d("server list", "Showing server list of " + list.size + " elements")
         recyclerView.layoutManager=LinearLayoutManager(this)
-        recyclerView.adapter=ServerRecyclerManager(list)
+        recyclerView.adapter= ServerRecyclerManager(list)
     }
 
 

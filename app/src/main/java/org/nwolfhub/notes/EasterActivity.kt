@@ -1,10 +1,11 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import org.nwolfhub.notes.R
 
 
 class EasterActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package org.nwolfhub;
+package org.nwolfhub.notes;
 
 import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityEvent;

@@ -1,4 +1,4 @@
-package org.nwolfhub;
+package org.nwolfhub.notes;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -11,7 +11,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.nwolfhub.model.Server;
+import org.nwolfhub.notes.R;
+import org.nwolfhub.notes.model.Server;
 
 import java.util.ArrayList;
 import java.util.List;

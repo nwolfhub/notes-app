@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import org.nwolfhub.notes.R
 
 class Welcome : AppCompatActivity() {
     @SuppressLint("SetTextI18n")

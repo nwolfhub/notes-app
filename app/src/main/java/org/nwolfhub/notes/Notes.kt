@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -29,13 +29,14 @@ import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.nwolfhub.databinding.ActivityNotesBinding
-import org.nwolfhub.model.Note
-import org.nwolfhub.util.Cache
-import org.nwolfhub.util.TestersApi
-import org.nwolfhub.util.UpdateColors
-import org.nwolfhub.util.WebCacher
-import org.nwolfhub.util.WebUtils
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.databinding.ActivityNotesBinding
+import org.nwolfhub.notes.model.Note
+import org.nwolfhub.notes.util.Cache
+import org.nwolfhub.notes.util.TestersApi
+import org.nwolfhub.notes.util.UpdateColors
+import org.nwolfhub.notes.util.WebCacher
+import org.nwolfhub.notes.util.WebUtils
 import java.lang.Exception
 
 class Notes : AppCompatActivity() {
@@ -130,7 +131,7 @@ class Notes : AppCompatActivity() {
             ) {
                 menu?.setHeaderTitle("Select action")
                 menu?.add(("Delete"))?.setOnMenuItemClickListener { // TODO: Add confirmation dialog
-                    AlertDialog.Builder(PublicShared.activity).setTitle("Are you sure that you want to delete this note?").setPositiveButton("yes") {_, _ ->
+                    AlertDialog.Builder(PublicShared.activity).setTitle("Are you sure that you want to delete this note?").setPositiveButton("yes") { _, _ ->
                         val name = nameText.text.toString()
                         if (local.tag.equals("online")) {
                             PublicShared.activity.runOnUiThread {
@@ -308,7 +309,9 @@ class Notes : AppCompatActivity() {
             holder.nameText.text = notes[position].name
             holder.descriptionText.text = notes[position].description
             Log.d("note parsing", "Parsing note " + notes[position].name + ": " + notes[position].online)
-            if(notes[position].online) holder.local.setImageResource(R.drawable.web) else holder.local.setBackgroundResource(R.drawable.local)
+            if(notes[position].online) holder.local.setImageResource(R.drawable.web) else holder.local.setBackgroundResource(
+                R.drawable.local
+            )
             if(notes[position].online) holder.local.tag="online" else holder.local.tag="offline"
             holder.itemView.setOnClickListener {
                 PublicShared.preferences.edit().putString("selected", holder.nameText.text.toString()).apply()

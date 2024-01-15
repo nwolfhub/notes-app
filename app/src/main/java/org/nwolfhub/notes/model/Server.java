@@ -1,4 +1,4 @@
-package org.nwolfhub.model;
+package org.nwolfhub.notes.model;
 
 public class Server {
     public String name;

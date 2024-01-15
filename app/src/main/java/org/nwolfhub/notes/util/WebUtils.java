@@ -1,4 +1,4 @@
-package org.nwolfhub.util;
+package org.nwolfhub.notes.util;
 
 import android.util.Log;
 

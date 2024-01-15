@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -6,8 +6,9 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
-import org.nwolfhub.util.UpdateColors
-import org.nwolfhub.util.WebUtils
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.util.UpdateColors
+import org.nwolfhub.notes.util.WebUtils
 import org.nwolfhub.utils.TextAction
 import org.nwolfhub.utils.Utils
 

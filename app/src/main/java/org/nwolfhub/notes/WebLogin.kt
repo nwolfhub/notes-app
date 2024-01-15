@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.animation.ObjectAnimator
 import android.content.Intent
@@ -25,8 +25,9 @@ import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.nwolfhub.model.Server
-import org.nwolfhub.util.UpdateColors
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.model.Server
+import org.nwolfhub.notes.util.UpdateColors
 import java.util.Random
 import java.util.stream.Collectors
 import org.nwolfhub.utils.*
@@ -253,7 +254,7 @@ class WebLogin : AppCompatActivity() {
             }
         }
         secondLayout.alpha=0f
-        PublicShared.counter=0
+        PublicShared.counter =0
         val servers = HashMap<String, String>()
         PublicShared.webActivity = this
         servers["servers"]="";
@@ -277,7 +278,7 @@ class WebLogin : AppCompatActivity() {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                 if ((spinner.selectedItem as String).equals("servers")) {
                     PublicShared.counter++
-                    if(PublicShared.counter>0) {
+                    if(PublicShared.counter >0) {
                         PublicShared.webActivity.runOnUiThread {
                             startActivity(
                                 Intent(
@@ -298,7 +299,9 @@ class WebLogin : AppCompatActivity() {
         }
         spinner.adapter=spinnerArrayAdapter
         //Thread {animate(loginButton)}.start(); Thread{animate(registerButton)}.start()
-        UpdateColors.updateColors(this, registerButton, loginButton, selector, secondLayout, returnButton, proceedLogin, findViewById(R.id.webLoginMainView))
+        UpdateColors.updateColors(this, registerButton, loginButton, selector, secondLayout, returnButton, proceedLogin, findViewById(
+            R.id.webLoginMainView
+        ))
         UpdateColors.updateBars(this)
         var selected = 0 //0 - nothing, 1 - login, 2 - register
         secondLayout.visibility = View.GONE

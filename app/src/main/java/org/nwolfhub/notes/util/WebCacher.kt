@@ -1,6 +1,5 @@
-package org.nwolfhub.util
+package org.nwolfhub.notes.util
 
-import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
@@ -11,9 +10,9 @@ import androidx.core.graphics.BlendModeCompat
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.nwolfhub.Notes
-import org.nwolfhub.R
-import org.nwolfhub.model.Note
+import org.nwolfhub.notes.Notes
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.model.Note
 import java.lang.IllegalArgumentException
 
 class WebCacher(val cache: Cache) {
@@ -24,7 +23,7 @@ class WebCacher(val cache: Cache) {
         }
     }
 
-    fun getCachedNote(name:String):Note? {
+    fun getCachedNote(name:String): Note? {
         synchronized(cache) {
             return cache.getCachedNote(name)
         }
@@ -84,7 +83,10 @@ class WebCacher(val cache: Cache) {
                 val notes = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
                 val notesList = ArrayList<Note>()
                 for (note in notes) {
-                    val finalNote = Note(note.asJsonObject.get("name").asString, "{ONLINECACHE}")
+                    val finalNote = Note(
+                        note.asJsonObject.get("name").asString,
+                        "{ONLINECACHE}"
+                    )
                     finalNote.online = true
                     notesList.add(finalNote)
                 }
@@ -119,7 +121,7 @@ class WebCacher(val cache: Cache) {
             }.start()
         }
     }
-    fun checkOnline(token:String, server:String, notes:Notes) {
+    fun checkOnline(token:String, server:String, notes: Notes) {
         val authed = WebUtils.checkAuth(token, server)
         notes.runOnUiThread {
             val bar = notes.findViewById<ProgressBar>(R.id.fetchOnlineNotes)
@@ -161,7 +163,7 @@ class WebCacher(val cache: Cache) {
         }
     }
 
-    fun updateNote(note:Note) {
+    fun updateNote(note: Note) {
         cache.cacheNote(note)
     }
 }

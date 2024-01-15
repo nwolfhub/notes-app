@@ -5,7 +5,7 @@
     android:id="@+id/mainLoginInfoLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".WebInfo">
+    tools:context=".notes.WebInfo">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

@@ -1,4 +1,4 @@
-package org.nwolfhub
+package org.nwolfhub.notes
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -19,10 +19,11 @@ import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.nwolfhub.model.Note
-import org.nwolfhub.util.Cache
-import org.nwolfhub.util.UpdateColors
-import org.nwolfhub.util.WebCacher
+import org.nwolfhub.notes.R
+import org.nwolfhub.notes.model.Note
+import org.nwolfhub.notes.util.Cache
+import org.nwolfhub.notes.util.UpdateColors
+import org.nwolfhub.notes.util.WebCacher
 import java.lang.Exception
 
 
@@ -157,7 +158,13 @@ class EditActivity : AppCompatActivity() {
             val btn = findViewById<Button>(R.id.save)
             val name = findViewById<EditText>(R.id.noteNameEdit)
             val text = findViewById<EditText>(R.id.noteText)
-            WebCacher(Cache(this)).updateNote(Note(name.text.toString(), text.text.toString(), true))
+            WebCacher(Cache(this)).updateNote(
+                Note(
+                    name.text.toString(),
+                    text.text.toString(),
+                    true
+                )
+            )
             btn.isEnabled=false; name.isEnabled=false;text.isEnabled=false
             val noteName = name.text.toString()
             val noteText = text.text.toString()
