@@ -1,4 +1,4 @@
-package org.nwolfhub.notes.util
+package org.nwolfhub.notes.deprecated.util
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE

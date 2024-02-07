@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -12,7 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.R
-import org.nwolfhub.notes.model.Server
+import org.nwolfhub.notes.deprecated.model.Server
 
 class ServerManageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

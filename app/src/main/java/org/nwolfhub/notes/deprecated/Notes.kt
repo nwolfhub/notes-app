@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -31,19 +31,19 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.R
 import org.nwolfhub.notes.databinding.ActivityNotesBinding
-import org.nwolfhub.notes.model.Note
-import org.nwolfhub.notes.util.Cache
-import org.nwolfhub.notes.util.TestersApi
-import org.nwolfhub.notes.util.UpdateColors
-import org.nwolfhub.notes.util.WebCacher
-import org.nwolfhub.notes.util.WebUtils
+import org.nwolfhub.notes.deprecated.model.OldNote
+import org.nwolfhub.notes.deprecated.util.Cache
+import org.nwolfhub.notes.deprecated.util.TestersApi
+import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.deprecated.util.WebCacher
+import org.nwolfhub.notes.deprecated.util.WebUtils
 import java.lang.Exception
 
 class Notes : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityNotesBinding
-    private var onlineNotes:ArrayList<Note> = ArrayList()
+    private var onlineNotes:ArrayList<OldNote> = ArrayList()
     private var finished = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +65,7 @@ class Notes : AppCompatActivity() {
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
         PublicShared.preferences = preferences
         PublicShared.activity = this
-        val notes = ArrayList<Note>()
+        val notes = ArrayList<OldNote>()
         val welcomedPref = getSharedPreferences("main", MODE_PRIVATE)
         val welcomed = welcomedPref.getBoolean("welcomed", false)
         val serversPreferences = getSharedPreferences("servers", MODE_PRIVATE)
@@ -102,12 +102,12 @@ class Notes : AppCompatActivity() {
             }.start()
         }
     }
-    private fun rebuildLocalNotesList():ArrayList<Note> {
+    private fun rebuildLocalNotesList():ArrayList<OldNote> {
         val preferences = getSharedPreferences("notes", MODE_PRIVATE)
-        val notes = ArrayList<Note>()
+        val notes = ArrayList<OldNote>()
         for (note in preferences.all.entries) {
             if (!note.key.toString().equals("selected") && !note.key.toString().equals("isOnline")) notes.add(
-                Note(
+                OldNote(
                     note.key.toString(),
                     note.value.toString()
                 )
@@ -115,7 +115,7 @@ class Notes : AppCompatActivity() {
         }
         return notes
     }
-    class NotesRecyclerAdapter(private val notes: List<Note>) :
+    class NotesRecyclerAdapter(private val notes: List<OldNote>) :
         RecyclerView.Adapter<NotesRecyclerAdapter.MyViewHolder>() {
         class MyViewHolder (itemView: View) : RecyclerView.ViewHolder(itemView), OnCreateContextMenuListener {
             init{
@@ -372,11 +372,11 @@ class Notes : AppCompatActivity() {
                         Thread.sleep(20)
                     }
                 }.start()
-                val notes = ArrayList<Note>()
+                val notes = ArrayList<OldNote>()
                 val rootElement = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
                 for (jsonObject in rootElement) {
                     val noteObject = jsonObject.asJsonObject
-                    val note = Note()
+                    val note = OldNote()
                     note.name=noteObject.get("name").asString
                     note.encryption=noteObject.get("encryption").asInt
                     note.description="Web note"

@@ -1,5 +1,6 @@
-package org.nwolfhub.notes.model;
+package org.nwolfhub.notes.deprecated.model;
 
+@Deprecated
 public class Server {
     public String name;
     public String url;

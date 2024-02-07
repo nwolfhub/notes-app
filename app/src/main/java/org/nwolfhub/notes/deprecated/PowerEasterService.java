@@ -1,4 +1,4 @@
-package org.nwolfhub.notes;
+package org.nwolfhub.notes.deprecated;
 
 import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityEvent;

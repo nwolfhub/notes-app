@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment

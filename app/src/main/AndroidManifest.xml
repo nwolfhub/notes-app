@@ -19,24 +19,30 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
-            android:name=".ServerManageActivity"
+            android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".EasterActivity"
+            android:name=".AnaEA"
             android:exported="false" />
         <activity
-            android:name=".WebInfo"
+            android:name=".deprecated.ServerManageActivity"
             android:exported="false" />
         <activity
-            android:name=".WebLogin"
+            android:name=".deprecated.EasterActivity"
             android:exported="false" />
         <activity
-            android:name=".EditActivity"
+            android:name=".deprecated.WebInfo"
+            android:exported="false" />
+        <activity
+            android:name=".deprecated.WebLogin"
+            android:exported="false" />
+        <activity
+            android:name=".deprecated.EditActivity"
             android:exported="false"
             android:fitsSystemWindows="true"
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
-            android:name=".Notes"
+            android:name=".deprecated.Notes"
             android:exported="true"
             android:label="@string/title_activity_notes"
             android:theme="@style/Theme.Notes">
@@ -47,7 +53,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Welcome"
+            android:name=".deprecated.Welcome"
             android:exported="false"
             android:label="@string/title_activity_notes"
             android:theme="@style/Theme.Notes" />

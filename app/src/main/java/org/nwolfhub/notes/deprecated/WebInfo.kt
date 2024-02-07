@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -7,8 +7,8 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import org.nwolfhub.notes.R
-import org.nwolfhub.notes.util.UpdateColors
-import org.nwolfhub.notes.util.WebUtils
+import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.deprecated.util.WebUtils
 import org.nwolfhub.utils.TextAction
 import org.nwolfhub.utils.Utils
 

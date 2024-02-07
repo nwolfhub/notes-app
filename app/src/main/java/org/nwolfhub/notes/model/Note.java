@@ -1,57 +1,54 @@
 package org.nwolfhub.notes.model;
 
-import java.io.Serializable;
-
-public class Note implements Serializable {
+public class Note {
+    public String id;
     public String name;
-    public String description;
+    public String content;
+    public User owner;
 
-    public int encryption = 0;
-    public boolean online = false;
+    public Note(String id, String name, String content, User owner) {
+        this.id = id;
+        this.name = name;
+        this.content = content;
+        this.owner = owner;
+    }
 
     public Note() {
     }
 
-    public Note(String name, String description) {
-        this.name = name;
-        this.description = description;
+    public String getId() {
+        return id;
     }
 
-    public Note(String name, String description, boolean online) {
-        this.name = name;
-        this.description = description;
-        this.online = online;
+    public Note setId(String id) {
+        this.id = id;
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Note setName(String name) {
         this.name = name;
+        return this;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public Note setContent(String content) {
+        this.content = content;
+        return this;
     }
 
-    public int getEncryption() {
-        return encryption;
+    public User getOwner() {
+        return owner;
     }
 
-    public void setEncryption(int encryption) {
-        this.encryption = encryption;
-    }
-
-    public boolean isOnline() {
-        return online;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
+    public Note setOwner(User owner) {
+        this.owner = owner;
+        return this;
     }
 }

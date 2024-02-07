@@ -1,11 +1,11 @@
-package org.nwolfhub.notes.util;
+package org.nwolfhub.notes.deprecated.util;
 
 import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import org.nwolfhub.notes.model.Note;
+import org.nwolfhub.notes.deprecated.model.OldNote;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class Cache {
     private Context context;
 
@@ -24,13 +25,13 @@ public class Cache {
         this.context = context;
     }
 
-    public void cacheOnlineNotes(List<Note> notes) {
+    public void cacheOnlineNotes(List<OldNote> notes) {
         File cacheDir = new File(context.getCacheDir(), "notes");
         if(!cacheDir.isDirectory()) {
             cacheDir.mkdirs();
         }
         Log.d("Notes caching", "Caching " + notes.size() + " notes");
-        for(Note note:notes) {
+        for(OldNote note:notes) {
             if(note.isOnline()) {
                 File noteFile = new File(cacheDir, note.getName() + ".note");
                 if (!noteFile.exists()) {
@@ -48,10 +49,10 @@ public class Cache {
             }
         }
         Log.d("Notes caching", "Cleaning up deleted online notes");
-        List<String> names = notes.stream().map(Note::getName).collect(Collectors.toList());
+        List<String> names = notes.stream().map(OldNote::getName).collect(Collectors.toList());
         for(File noteFile:Objects.requireNonNull(cacheDir.listFiles())) {
             try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(noteFile.toPath()))) {
-                Note note = (Note) in.readObject();
+                OldNote note = (OldNote) in.readObject();
                 if(!names.contains(note.getName())) {
                     noteFile.delete();
                 }
@@ -64,17 +65,17 @@ public class Cache {
         Log.d("Notes caching", "Finished caching notes");
     }
 
-    public List<Note> getCachedNotes() {
+    public List<OldNote> getCachedNotes() {
         File cacheDir = new File(context.getCacheDir(), "notes");
         if(!cacheDir.isDirectory()) {
             return new ArrayList<>();
         }
         else {
-            List<Note> notes = new ArrayList<>();
+            List<OldNote> notes = new ArrayList<>();
             for(File noteFile: Objects.requireNonNull(cacheDir.listFiles())) {
                 if(noteFile.getName().endsWith(".note")) {
                     try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(noteFile.toPath()))) {
-                        Note note = (Note) in.readObject();
+                        OldNote note = (OldNote) in.readObject();
                         notes.add(note);
                     } catch (IOException e) {
                         Log.d("Notes caching", "Could not load note " + noteFile.getAbsolutePath());
@@ -88,13 +89,13 @@ public class Cache {
     }
 
     @Nullable
-    public Note getCachedNote(String name) {
+    public OldNote getCachedNote(String name) {
         File cacheDir = new File(context.getCacheDir(), "notes");
         if (!cacheDir.isDirectory()) return null;
         File noteFile = new File(cacheDir, name + ".note");
         if (!noteFile.exists()) return null;
         try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(noteFile.toPath()))) {
-            return (Note) in.readObject();
+            return (OldNote) in.readObject();
         } catch (IOException e) {
             Log.d("Notes caching", "Could note read cached note: " + e);
             return null;
@@ -104,7 +105,7 @@ public class Cache {
         }
     }
 
-    public void cacheNote(Note note) {
+    public void cacheNote(OldNote note) {
         File cacheDir = new File(context.getCacheDir(), "notes");
         if (!cacheDir.isDirectory()) cacheDir.mkdirs();
         File noteFile = new File(cacheDir, note.getName() + ".note");

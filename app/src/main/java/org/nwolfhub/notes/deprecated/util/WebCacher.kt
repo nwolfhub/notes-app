@@ -1,4 +1,4 @@
-package org.nwolfhub.notes.util
+package org.nwolfhub.notes.deprecated.util
 
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -10,20 +10,20 @@ import androidx.core.graphics.BlendModeCompat
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.nwolfhub.notes.Notes
+import org.nwolfhub.notes.deprecated.Notes
 import org.nwolfhub.notes.R
-import org.nwolfhub.notes.model.Note
+import org.nwolfhub.notes.deprecated.model.OldNote
 import java.lang.IllegalArgumentException
 
 class WebCacher(val cache: Cache) {
 
-    fun getCachedNotes():List<Note> {
+    fun getCachedNotes():List<OldNote> {
         synchronized(cache) {
             return cache.cachedNotes
         }
     }
 
-    fun getCachedNote(name:String): Note? {
+    fun getCachedNote(name:String): OldNote? {
         synchronized(cache) {
             return cache.getCachedNote(name)
         }
@@ -81,9 +81,9 @@ class WebCacher(val cache: Cache) {
                     }
                 }.start()
                 val notes = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
-                val notesList = ArrayList<Note>()
+                val notesList = ArrayList<OldNote>()
                 for (note in notes) {
-                    val finalNote = Note(
+                    val finalNote = OldNote(
                         note.asJsonObject.get("name").asString,
                         "{ONLINECACHE}"
                     )
@@ -163,7 +163,7 @@ class WebCacher(val cache: Cache) {
         }
     }
 
-    fun updateNote(note: Note) {
+    fun updateNote(note: OldNote) {
         cache.cacheNote(note)
     }
 }

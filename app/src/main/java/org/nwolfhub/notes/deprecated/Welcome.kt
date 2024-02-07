@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.annotation.SuppressLint
 import android.content.Intent

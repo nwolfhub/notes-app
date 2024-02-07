@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -20,10 +20,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.R
-import org.nwolfhub.notes.model.Note
-import org.nwolfhub.notes.util.Cache
-import org.nwolfhub.notes.util.UpdateColors
-import org.nwolfhub.notes.util.WebCacher
+import org.nwolfhub.notes.deprecated.model.OldNote
+import org.nwolfhub.notes.deprecated.util.Cache
+import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.deprecated.util.WebCacher
 import java.lang.Exception
 
 
@@ -159,7 +159,7 @@ class EditActivity : AppCompatActivity() {
             val name = findViewById<EditText>(R.id.noteNameEdit)
             val text = findViewById<EditText>(R.id.noteText)
             WebCacher(Cache(this)).updateNote(
-                Note(
+                OldNote(
                     name.text.toString(),
                     text.text.toString(),
                     true

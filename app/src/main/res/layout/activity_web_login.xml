@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".notes.WebLogin">
+    tools:context="org.nwolfhub.notes.deprecated.WebLogin">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/loginLayout"
@@ -58,6 +58,14 @@
             app:layout_constraintBottom_toTopOf="@+id/continueLogin"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <CheckBox
+            android:id="@+id/autoretry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Remember me (unsafe)"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/passwordLogin" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

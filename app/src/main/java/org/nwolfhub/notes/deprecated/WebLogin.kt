@@ -1,4 +1,4 @@
-package org.nwolfhub.notes
+package org.nwolfhub.notes.deprecated
 
 import android.animation.ObjectAnimator
 import android.content.Intent
@@ -13,6 +13,7 @@ import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Spinner
@@ -26,8 +27,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.R
-import org.nwolfhub.notes.model.Server
-import org.nwolfhub.notes.util.UpdateColors
+import org.nwolfhub.notes.deprecated.model.Server
+import org.nwolfhub.notes.deprecated.util.UpdateColors
 import java.util.Random
 import java.util.stream.Collectors
 import org.nwolfhub.utils.*
@@ -87,8 +88,10 @@ class WebLogin : AppCompatActivity() {
     private fun login(username:String, password:String, server:String, buttons:List<Button>, client: OkHttpClient) {
         val welcomeToWeb: TextView = findViewById(R.id.welcomeToWeb)
         val progressBar: ProgressBar = findViewById(R.id.loginBar)
+        val rememberMe: CheckBox = findViewById(R.id.autoretry)
+
         Log.d("web login", "Attempting to login on $server")
-        canExit=false
+        canExit=false // blocking back button
         val action:TextAction = object: TextAction() {
             override fun applyText(text: String?) {
                 runOnUiThread {
@@ -125,8 +128,9 @@ class WebLogin : AppCompatActivity() {
                     response.close()
                     runOnUiThread {
                         val preferences = getSharedPreferences("web", MODE_PRIVATE)
-                        preferences.edit().putString("token", token).apply()
+                        preferences.edit().putString("token", token).apply() //put token and chosen server to preferences obtained on previous lise
                         preferences.edit().putString("server", server).apply()
+                        passPassword(if (rememberMe.isChecked) password else null) //check if "remember me" was ticked
                         startActivity(Intent(this, Notes::class.java))
                         finish()
                     }
@@ -137,7 +141,7 @@ class WebLogin : AppCompatActivity() {
                     }
                     var error = "wrong server response"
                     try {
-                         error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
+                        error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
                     } catch (_:NullPointerException) {}
                     Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to login: $error", 20, 20, 0, action)
                 }
@@ -161,27 +165,28 @@ class WebLogin : AppCompatActivity() {
     private fun register(username:String, password:String, server:String, buttons:List<Button>, client: OkHttpClient) {
         val welcomeToWeb: TextView = findViewById(R.id.welcomeToWeb)
         val progressBar: ProgressBar = findViewById(R.id.loginBar)
+        val rememberMe: CheckBox = findViewById(R.id.autoretry)
         Log.d("web login", "Attempting to register on $server")
         canExit = false;
         val action:TextAction = object: TextAction() {
             override fun applyText(text: String?) {
                 runOnUiThread {
-                    welcomeToWeb.text=text
+                    welcomeToWeb.text=text //used later in Utils.typeText to call this method
                 }
             }
         }
         for(button in buttons) {
-            button.isEnabled=false
+            button.isEnabled=false //disabling all stuff to prevent spam from user side
         }
         Thread {
             runOnUiThread {
-                ObjectAnimator.ofFloat(welcomeToWeb, "alpha", 0f).setDuration(100).start()
+                ObjectAnimator.ofFloat(welcomeToWeb, "alpha", 0f).setDuration(100).start() //show loading bar and hide welcometoweb
                 ObjectAnimator.ofFloat(progressBar, "alpha", 1f).setDuration(100).start()
             }
             try {
                 val response = client.newCall(
                     Request.Builder().url("$server/api/users/register")
-                        .post("username=$username\npassword=$password".toRequestBody()).build()
+                        .post("username=$username\npassword=$password".toRequestBody()).build() //form request and send it
                 ).execute()
                 Log.d("web login", "Obtained code " + response.code)
                 if(response.code==200) {
@@ -201,6 +206,7 @@ class WebLogin : AppCompatActivity() {
                         val preferences = getSharedPreferences("web", MODE_PRIVATE)
                         preferences.edit().putString("token", token).apply()
                         preferences.edit().putString("server", server).apply()
+                        passPassword(if (rememberMe.isChecked) password else null)
                         startActivity(Intent(this, Notes::class.java))
                         finish()
                     }
@@ -211,7 +217,7 @@ class WebLogin : AppCompatActivity() {
                     }
                     var error = "wrong server response"
                     try {
-                        error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString
+                        error=JsonParser.parseString(response.body!!.string()).asJsonObject.get("error").asString //get error text
                     } catch (_:NullPointerException) {}
                     Utils.typeText(welcomeToWeb.text.toString(), true, "", "Failed to register: $error", 20, 20, 0, action)
                 }
@@ -231,6 +237,15 @@ class WebLogin : AppCompatActivity() {
             canExit=true
         }.start()
     }
+
+    private fun passPassword(password: String?) {
+        val preferences = getSharedPreferences("web", MODE_PRIVATE)
+        if(password==null) {
+            preferences.edit().remove("retryPassword").apply();
+        } else {
+            preferences.edit().putString("retryPassword", password).apply()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_login)
@@ -247,25 +262,19 @@ class WebLogin : AppCompatActivity() {
         val serversPref = getSharedPreferences("servers", MODE_PRIVATE)
         val welcomeToWeb:TextView = findViewById(R.id.welcomeToWeb)
         var now = 0
-        welcomeToWeb.setOnClickListener {
-            if(now++>=10) {
-                now=0
-                PowerEasterService().execute()
-            }
-        }
         secondLayout.alpha=0f
         PublicShared.counter =0
         val servers = HashMap<String, String>()
         PublicShared.webActivity = this
         servers["servers"]="";
-        for(serverRaw in serversPref.all.keys) {
-            if(!serverRaw.equals("servers")) { //I am too lazy to refactor code and fully remove this shitcode rn so Il do it later I promise
+        for(serverRaw in serversPref.all.keys) { //parse servers list
+            if(!serverRaw.equals("servers")) { //I am too lazy to refactor code and fully remove this shitcode rn so Il do it later I promise //bro at least write this as todos pls
                 val server =
                     Server(
                         serverRaw.toString(),
                         serversPref.getString(serverRaw.toString(), "")
                     )
-                servers[server.name.toString()] = server.url
+                servers[server.name.toString()] = server.url //form a list ouf of servers in preferences
             }
         }
         val spinnerArrayAdapter = ArrayAdapter(
