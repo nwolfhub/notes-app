@@ -13,8 +13,7 @@ public class Note {
         this.owner = owner;
     }
 
-    public Note() {
-    }
+    public Note() {}
 
     public String getId() {
         return id;
