@@ -1,5 +1,6 @@
 package org.nwolfhub.notes
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,5 +16,6 @@ class MainActivity : AppCompatActivity() {
         val adapter = NotesAdapter(dataset)
         val recyclerView:RecyclerView = findViewById(R.id.notesList)
         recyclerView.adapter=adapter
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 }

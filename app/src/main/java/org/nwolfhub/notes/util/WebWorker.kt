@@ -36,7 +36,7 @@ class WebWorker() {
     }
 
     fun prepareLogin(info: ServerInfo): String? {
-        val response = client.newCall(Request.Builder().url(info.address + VersionToMethod.versions[info.version]!!["create"]).build()).execute()
+        val response = client.newCall(Request.Builder().url(info.address + VersionToMethod.versions[info.version]!!["login"]).build()).execute()
         return if(response.isSuccessful) {
             JsonParser.parseString(response.body!!.string()).asJsonObject.get("url").asString
         } else null
