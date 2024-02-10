@@ -13,7 +13,7 @@ import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.model.VersionToMethod
 import java.net.URLEncoder
 
-class WebWorker(context: Context) {
+class WebWorker() {
     private val client:OkHttpClient = OkHttpClient()
 
     fun readServer(url: String): ServerInfo {
