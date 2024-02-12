@@ -49,9 +49,9 @@ class ServerSelect : AppCompatActivity() {
     }
 
     private fun animateGradient(view:View) {
-        val start = Color.DKGRAY
-        val mid = Color.MAGENTA
-        val end = Color.BLUE
+        val start = Color.BLACK
+        val mid = Color.WHITE
+        val end = Color.BLACK
         val gradient = view.background as GradientDrawable
 
         val evaluator = ArgbEvaluator()

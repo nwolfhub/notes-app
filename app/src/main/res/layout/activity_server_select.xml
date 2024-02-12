@@ -35,10 +35,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/globeVIewContainer" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/newServer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/new_server_shape"
         android:text="Add new server"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
