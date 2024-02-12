@@ -43,6 +43,24 @@ class ServerUtils {
                 .apply()
         }
     }
+    fun readServer(url: String): ServerInfo {
+        val response = client.newCall(Request.Builder().url("$url/api/v1/server/info").get().build()).execute()
+        return if(response.isSuccessful) {
+            val respObject = JsonParser.parseString(response.body!!.string()).asJsonObject
+            val serverInfo = ServerInfo(
+                respObject.get("api_version").asString,
+                url,
+                respObject.get("name").asString
+            )
+            serverInfo
+        } else {
+            ServerInfo(
+                "legacy",
+                url,
+                "Legacy server"
+            )
+        }
+    }
 
     fun prepareCodes():List<String> {
         val encoder: Base64.Encoder = Base64.getEncoder().withoutPadding()

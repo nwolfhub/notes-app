@@ -1,7 +1,5 @@
 package org.nwolfhub.notes
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.webkit.WebResourceRequest
@@ -28,21 +26,29 @@ class LoginActivity : AppCompatActivity() {
                     WebWorker().prepareLogin(svInfo) + "?response_type=code&client_id=notes&code_challenge_method=S256&code_challenge=" + codes[0]
                 runOnUiThread {
                     val web = findViewById<WebView>(R.id.loginWebView)
-                    web.webViewClient=MyWebViewClient()
+                    web.webViewClient=MyWebViewClient(verifier = codes[1])
                     web.loadUrl(url)
                 }
             }.start()
         }
     }
 
-    class MyWebViewClient: WebViewClient() {
+    class MyWebViewClient(val verifier: String) : WebViewClient() {
         override fun shouldOverrideUrlLoading(
             view: WebView,
             request: WebResourceRequest?
         ): Boolean {
             val url = view.url
-            // Log.d("LOG","previous_url: " + url);
+            Log.d("Previous url", "$url");
             return false
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            if(url!!.contains("/postlogin")) {
+                val code = url.split("&code=")[1].split("&")[0]
+                Log.d("Keycloak code", code)
+            }
         }
     }
 }
