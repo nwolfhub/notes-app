@@ -19,7 +19,8 @@ class ServerUtils {
     private val client:OkHttpClient = OkHttpClient()
     private val gson = Gson()
     fun refreshToken(pref: SharedPreferences) {
-        val active = gson.fromJson(pref.getString("active_server", null), ServerInfo::class.java)
+        val activeName = pref.getString("active_server", null)
+        val active = ServerStorage(pref).getServer(activeName);
         val last = pref.getString("refresh", null)
         val codes = prepareCodes()
         val body = FormBody.Builder().add("grant_type", "refresh_token")
@@ -27,7 +28,7 @@ class ServerUtils {
             .add("client_id", "notes")
             .build()
         val response = client.newCall(Request.Builder().url(
-            WebWorker().prepareLogin(active)!!.replace("/auth", "/token"))
+            WebWorker().prepareLogin(active!!)!!.replace("/auth", "/token"))
             .post(body)
             .build()).execute()
         if(!response.isSuccessful) {

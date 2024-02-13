@@ -39,12 +39,14 @@ public class ServerStorage {
     }
 
     @Nullable
-    public ServerInfo getServer(String name) {
+    public ServerInfo getServer(@Nullable String name) {
+        if (name==null) return null;
         return getServers().stream().filter(e -> e.name.equals(name)).findAny().orElse(null);
     }
 
     public void addServer(ServerInfo serverInfo) {
         List<ServerInfo> current = getServers();
-        
+        current.add(serverInfo);
+        preferences.edit().putString("servers", gson.toJson(current)).apply();
     }
 }

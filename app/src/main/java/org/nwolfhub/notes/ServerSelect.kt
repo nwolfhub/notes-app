@@ -17,15 +17,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.WindowCompat
 import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.util.ServerStorage
 
 
 class ServerSelect : AppCompatActivity() {
+    private lateinit var serverStorage:ServerStorage;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         UpdateColors.updateBars(this)
         setContentView(R.layout.activity_server_select)
+        serverStorage = ServerStorage(getSharedPreferences("web_updated", MODE_PRIVATE))
 
         //prepare spinning globe
         val globeView:WebView = findViewById(R.id.globeView)
@@ -73,5 +76,9 @@ class ServerSelect : AppCompatActivity() {
         }
 
         animator.start()
+    }
+
+    private fun loadServerList() {
+        val servers = Se
     }
 }
