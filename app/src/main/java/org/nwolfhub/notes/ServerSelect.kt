@@ -6,17 +6,22 @@ import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
 import android.webkit.WebView
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.WindowCompat
+import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.model.ServerInfo
+import org.nwolfhub.notes.util.NotesAdapter
 import org.nwolfhub.notes.util.ServerStorage
 
 
@@ -43,6 +48,8 @@ class ServerSelect : AppCompatActivity() {
         //prepare "create new server" button
         val createNewServer:Button = findViewById(R.id.newServer)
         animateGradient(createNewServer)
+
+        loadServerList()
     }
 
 
@@ -79,6 +86,39 @@ class ServerSelect : AppCompatActivity() {
     }
 
     private fun loadServerList() {
-        val servers = Se
+        val servers = serverStorage.servers;
+        val adapter = ServersAdapter(servers)
+        val recycler:RecyclerView = findViewById(R.id.serversList)
+        recycler.adapter=adapter
+    }
+
+    class ServersAdapter(val servers: List<ServerInfo>):RecyclerView.Adapter<ServersAdapter.ViewHolder>() {
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val serverName: TextView
+            val serverAddress: TextView
+            val serverVersion: TextView
+            init {
+                serverName = view.findViewById(R.id.serverName)
+                serverAddress = view.findViewById(R.id.serverUrl)
+                serverVersion = view.findViewById(R.id.serverVer)
+            }
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.note_layout, parent, false)
+
+            return ServersAdapter.ViewHolder(view)
+        }
+
+        override fun getItemCount(): Int {
+            return servers.size
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.serverName.text=servers[position].name
+            holder.serverVersion.text=servers[position].version
+            holder.serverAddress.text=servers[position].address
+        }
     }
 }
