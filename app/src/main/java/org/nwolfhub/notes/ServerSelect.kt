@@ -3,9 +3,11 @@ package org.nwolfhub.notes
 import android.animation.ArgbEvaluator
 import android.animation.TimeAnimator
 import android.animation.ValueAnimator
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,14 +17,18 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
 import android.webkit.WebView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.model.ServerInfo
-import org.nwolfhub.notes.util.NotesAdapter
 import org.nwolfhub.notes.util.ServerStorage
+import org.nwolfhub.notes.util.ServerUtils
 
 
 class ServerSelect : AppCompatActivity() {
@@ -48,6 +54,7 @@ class ServerSelect : AppCompatActivity() {
         //prepare "create new server" button
         val createNewServer:Button = findViewById(R.id.newServer)
         animateGradient(createNewServer)
+        createNewServer.setOnClickListener { createNewServerInterface(null) }
 
         loadServerList()
     }
@@ -89,10 +96,43 @@ class ServerSelect : AppCompatActivity() {
         val servers = serverStorage.servers;
         val adapter = ServersAdapter(servers)
         val recycler:RecyclerView = findViewById(R.id.serversList)
+        recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter=adapter
     }
 
-    class ServersAdapter(val servers: List<ServerInfo>):RecyclerView.Adapter<ServersAdapter.ViewHolder>() {
+    private fun createNewServerInterface(prevUrl:String?) {
+        val urlInput:EditText = EditText(this)
+        if(prevUrl!=null) {
+            urlInput.setText(prevUrl)
+        }
+        urlInput.inputType = InputType.TYPE_TEXT_VARIATION_URI
+        val builder = AlertDialog.Builder(this)
+            .setTitle("Create new server")
+            .setMessage("Type the server uri")
+            .setView(urlInput)
+            .setPositiveButton("Ok", DialogInterface.OnClickListener { _, _ ->
+                run {
+                    if (urlInput.text.toString().contains("https://") || urlInput.text.contains("http://")) {
+                        try {
+                            Thread {
+                                val svInfo = ServerUtils().readServer(urlInput.text.toString())
+                                runOnUiThread {
+                                    serverStorage.addServer(svInfo)
+                                    loadServerList()
+                                }
+                            }.start()
+                        } catch (e:Exception) {
+                            Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+                            createNewServerInterface(urlInput.text.toString())
+                        }
+                    }
+                }
+            })
+            .setNegativeButton("Cancel") { _, _ -> }
+            .show()
+    }
+
+    class ServersAdapter(private val servers: List<ServerInfo>):RecyclerView.Adapter<ServersAdapter.ViewHolder>() {
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val serverName: TextView
             val serverAddress: TextView
@@ -106,9 +146,9 @@ class ServerSelect : AppCompatActivity() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.note_layout, parent, false)
+                .inflate(R.layout.single_server, parent, false)
 
-            return ServersAdapter.ViewHolder(view)
+            return ViewHolder(view)
         }
 
         override fun getItemCount(): Int {
