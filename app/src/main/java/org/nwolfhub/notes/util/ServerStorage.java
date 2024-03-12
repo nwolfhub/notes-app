@@ -48,6 +48,19 @@ public class ServerStorage {
     }
 
     @Nullable
+    public ServerInfo getActiveServer() {
+        String serverRaw = preferences.getString("server", null);
+        if(serverRaw==null) return null;
+        else {
+            return gson.fromJson(serverRaw, ServerInfo.class);
+        }
+    }
+
+    public void selectServer(ServerInfo serverInfo) {
+        preferences.edit().putString("server", gson.toJson(serverInfo)).apply();
+    }
+
+    @Nullable
     public ServerInfo getServer(@Nullable String name) {
         if (name==null) return null;
         return getServers().stream().filter(e -> e.name.equals(name)).findAny().orElse(null);
@@ -56,6 +69,11 @@ public class ServerStorage {
     public void addServer(ServerInfo serverInfo) {
         List<ServerInfo> current = getServers();
         current.add(serverInfo);
-        preferences.edit().putString("servers", gson.toJson(current)).apply();
+        JsonArray array = new JsonArray();
+        for(ServerInfo info:current) {
+            array.add(gson.toJson(info));
+        }
+        if(getActiveServer()==null) selectServer(serverInfo);
+        preferences.edit().putString("servers", array.toString()).apply();
     }
 }

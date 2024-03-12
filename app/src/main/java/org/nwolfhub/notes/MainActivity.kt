@@ -15,6 +15,6 @@ class MainActivity : AppCompatActivity() {
         val adapter = NotesAdapter(dataset)
         val recyclerView:RecyclerView = findViewById(R.id.notesList)
         recyclerView.adapter=adapter
-        startActivity(Intent(this, ServerSelect::class.java))
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 }
