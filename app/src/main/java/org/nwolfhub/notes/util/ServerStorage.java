@@ -1,15 +1,24 @@
 package org.nwolfhub.notes.util;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.internal.bind.JsonTreeReader;
+import com.google.gson.reflect.TypeToken;
 
 import org.nwolfhub.notes.model.ServerInfo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,14 +36,14 @@ public class ServerStorage {
         if(serverListRaw==null) {
             return new ArrayList<>();
         } else {
-            List<?> uncheckedList = (List<?>) gson.fromJson(serverListRaw, List.class);
-            return uncheckedList.stream().map(e -> {
-                try {
-                    return (ServerInfo) e;
-                } catch (ClassCastException e1) {
-                    return new ServerInfo("❤", "Failed to parse server info", "Broken server");
-                }
-            }).collect(Collectors.toList());
+            Log.d("Servers list", "Raw storage: " + serverListRaw);
+            JsonArray array = JsonParser.parseString(serverListRaw).getAsJsonArray();
+            Log.d("Servers list", "Rebuilding server list");
+            List<ServerInfo> serverInfos = new ArrayList<>();
+            for(JsonElement serverElement:array) {
+                serverInfos.add(gson.fromJson(serverElement.toString(), ServerInfo.class));
+            }
+            return serverInfos;
         }
     }
 
