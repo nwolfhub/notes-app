@@ -49,4 +49,8 @@ class WebWorker() {
             throw RuntimeException(response.body?.string() ?: response.code.toString())
         }
     }
+
+    //fun getToken(url:String, code:String):String? {
+    //
+    //}
 }

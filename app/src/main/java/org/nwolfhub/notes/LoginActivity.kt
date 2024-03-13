@@ -12,10 +12,12 @@ import android.widget.ProgressBar
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import okhttp3.OkHttpClient
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.ServerUtils
 import org.nwolfhub.notes.util.WebWorker
+import java.util.Arrays
 
 
 class LoginActivity : AppCompatActivity() {
@@ -61,6 +63,7 @@ class LoginActivity : AppCompatActivity() {
                 val url =
                     WebWorker().prepareLogin(svInfo) + "?response_type=code&client_id=notes&code_challenge_method=S256&code_challenge=" + codes[0]
                 runOnUiThread {
+                    Log.d("Codes", codes.toString())
                     val web = findViewById<WebView>(R.id.loginWebView)
                     web.webViewClient = MyWebViewClient(verifier = codes[1])
                     web.loadUrl(url)
@@ -93,6 +96,10 @@ class LoginActivity : AppCompatActivity() {
         super.finish()
     }
 
+    fun getToken(code:String) {
+
+    }
+
     class MyWebViewClient(val verifier: String) : WebViewClient() {
         override fun shouldOverrideUrlLoading(
             view: WebView,
@@ -109,7 +116,8 @@ class LoginActivity : AppCompatActivity() {
             if(url!!.contains("/postlogin")) {
                 val code = url.split("&code=")[1].split("&")[0]
                 Log.d("Keycloak code", code)
-
+                (context as LoginActivity).startCircle()
+                (context as LoginActivity).getToken(code)
             }
         }
     }
