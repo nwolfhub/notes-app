@@ -41,7 +41,8 @@ public class ServerStorage {
             Log.d("Servers list", "Rebuilding server list");
             List<ServerInfo> serverInfos = new ArrayList<>();
             for(JsonElement serverElement:array) {
-                serverInfos.add(gson.fromJson(serverElement.toString(), ServerInfo.class));
+                Log.d("Rebuilding server", serverElement.getAsString());
+                serverInfos.add(gson.fromJson(serverElement.getAsString(), ServerInfo.class));
             }
             return serverInfos;
         }
@@ -57,7 +58,8 @@ public class ServerStorage {
     }
 
     public void selectServer(ServerInfo serverInfo) {
-        preferences.edit().putString("server", gson.toJson(serverInfo)).apply();
+        if(serverInfo==null) preferences.edit().remove("server").apply();
+        else preferences.edit().putString("server", gson.toJson(serverInfo)).apply();
     }
 
     @Nullable
@@ -74,6 +76,20 @@ public class ServerStorage {
             array.add(gson.toJson(info));
         }
         if(getActiveServer()==null) selectServer(serverInfo);
+        preferences.edit().putString("servers", array.toString()).apply();
+    }
+
+    public void removeServer(String address) {
+        List<ServerInfo> current = getServers();
+        JsonArray array = new JsonArray();
+        for(ServerInfo info:current) {
+            if (!info.address.equals(address)) {
+                array.add(gson.toJson(info));
+            }
+        }
+        if(getActiveServer()!=null && getActiveServer().address.equals(address)) {
+            selectServer(null);
+        }
         preferences.edit().putString("servers", array.toString()).apply();
     }
 }

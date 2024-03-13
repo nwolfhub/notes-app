@@ -3,7 +3,10 @@ package org.nwolfhub.notes
 import android.animation.ArgbEvaluator
 import android.animation.TimeAnimator
 import android.animation.ValueAnimator
+import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -33,12 +36,16 @@ import org.nwolfhub.notes.util.ServerUtils
 
 class ServerSelect : AppCompatActivity() {
     private lateinit var serverStorage:ServerStorage;
+    companion object {
+        var context:Context? = null
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         UpdateColors.updateBars(this)
         setContentView(R.layout.activity_server_select)
+        context = this;
         serverStorage = ServerStorage(getSharedPreferences("web_updated", MODE_PRIVATE))
 
         //prepare spinning globe
@@ -92,9 +99,9 @@ class ServerSelect : AppCompatActivity() {
         animator.start()
     }
 
-    private fun loadServerList() {
+    fun loadServerList() {
         val servers = serverStorage.servers;
-        val adapter = ServersAdapter(servers)
+        val adapter = ServersAdapter(servers, serverStorage)
         val recycler:RecyclerView = findViewById(R.id.serversList)
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter=adapter
@@ -132,7 +139,8 @@ class ServerSelect : AppCompatActivity() {
             .show()
     }
 
-    class ServersAdapter(private val servers: List<ServerInfo>):RecyclerView.Adapter<ServersAdapter.ViewHolder>() {
+    class ServersAdapter(private val servers: List<ServerInfo>, private val storage:ServerStorage):RecyclerView.Adapter<ServersAdapter.ViewHolder>() {
+
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val serverName: TextView
             val serverAddress: TextView
@@ -156,6 +164,26 @@ class ServerSelect : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.itemView.setOnClickListener {
+                AlertDialog.Builder(context!!)
+                    .setTitle("Pick action")
+                    .setPositiveButton("Select") { _, _, ->
+                        run {
+                            storage.selectServer(storage.getServer(servers[position].name))
+                            context!!.startActivity(Intent(context, LoginActivity::class.java))
+                            val copy = (context as Activity);
+                            context = null
+                            copy.finish()
+                        }
+                    }
+                    .setNegativeButton("Delete"
+                    ) { _, _, ->
+                        run {
+                            storage.removeServer(servers[position].address)
+                            (context as ServerSelect).loadServerList()
+                        }
+                    }.show()
+            }
             holder.serverName.text=servers[position].name
             holder.serverVersion.text=servers[position].version
             holder.serverAddress.text=servers[position].address
