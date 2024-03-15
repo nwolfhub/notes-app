@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -50,7 +51,23 @@ class WebWorker() {
         }
     }
 
-    //fun getToken(url:String, code:String):String? {
-    //
-    //}
+    fun getToken(url:String, code:String, verifier:String):String? {
+        Log.d("Token exchange", "Original: " + url + ", replaced: " + url.replace("/auth", "/token"))
+        val response = client.newCall(Request.Builder()
+            .url(url.replace("/auth", "/token"))
+            .post(FormBody.Builder()
+                .add("code", code)
+                .add("code_verifier", verifier)
+                .add("grant_type", "authorization_code")
+                .add("client_id", "notes")
+                .build()).build()).execute()
+        Log.d("Token exchange", "Server responded with code " + response.code)
+        if(response.body!=null) {
+            Log.d("Token exchange", "Response body: " + response.body!!.string())
+            if(response.isSuccessful) {
+                return JsonParser.parseString(response.body!!.string()).asJsonObject.get("access_token").asString
+            }
+        }
+        return null
+    }
 }

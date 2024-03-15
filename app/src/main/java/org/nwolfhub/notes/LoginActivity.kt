@@ -9,6 +9,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,8 @@ class LoginActivity : AppCompatActivity() {
     companion object {
         var context:Context? = null;
     }
+    lateinit var svInfo:ServerInfo
+    lateinit var storage: ServerStorage
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -50,14 +53,15 @@ class LoginActivity : AppCompatActivity() {
 
         //initialize all the stuff
         val pref = getSharedPreferences("web_updated", MODE_PRIVATE)
-        val storage = ServerStorage(getSharedPreferences("web_updated", MODE_PRIVATE))
-        val svInfo = storage.activeServer
-        Log.d("Active server", svInfo?.address ?: "null")
+        storage = ServerStorage(getSharedPreferences("web_updated", MODE_PRIVATE))
+        val timedSv = storage.activeServer;
+        Log.d("Active server", timedSv?.address ?: "null")
         //check if any server is active
-        if (svInfo == null) {
+        if (timedSv == null) {
             startActivity(Intent(this, ServerSelect::class.java))
             finish()
         } else {
+            svInfo=timedSv;
             val codes = ServerUtils().prepareCodes()
             Thread {
                 val url =
@@ -96,8 +100,17 @@ class LoginActivity : AppCompatActivity() {
         super.finish()
     }
 
-    fun getToken(code:String) {
+    fun getToken(code:String, verifier: String) {
+        Thread {
+            val token = WebWorker().getToken(WebWorker().prepareLogin(svInfo).toString(), code, verifier)
+            if(token==null) {
+                Toast.makeText(this, "Failed to obtain token", Toast.LENGTH_LONG).show()
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            } else {
 
+            }
+        }.start()
     }
 
     class MyWebViewClient(val verifier: String) : WebViewClient() {
@@ -117,7 +130,7 @@ class LoginActivity : AppCompatActivity() {
                 val code = url.split("&code=")[1].split("&")[0]
                 Log.d("Keycloak code", code)
                 (context as LoginActivity).startCircle()
-                (context as LoginActivity).getToken(code)
+                (context as LoginActivity).getToken(code,verifier)
             }
         }
     }
