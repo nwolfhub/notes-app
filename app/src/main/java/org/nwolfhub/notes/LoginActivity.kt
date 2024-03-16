@@ -96,20 +96,19 @@ class LoginActivity : AppCompatActivity() {
                         startActivity(Intent(this, Notes::class.java))
                         finish()
                     }
-                } catch (e: RuntimeException){
+                } catch (e: RuntimeException) {
                     try {
-                        val tokens = worker.refreshToken(
-                            worker.prepareLogin(svInfo).toString(),
-                            storage.getRefreshToken(svInfo.address)!!
-                        )
-                        storage.setTokens(svInfo.address, JsonParser.parseString(tokens).asJsonObject)
-                        runOnUiThread {
-                            startActivity(Intent(this, Notes::class.java))
-                            finish()
+                        val result = worker.refreshAndPut(storage)
+                        if (result.has("access_token")) { //always true. Forces this shit not to run
+                            runOnUiThread {
+                                startActivity(Intent(this, Notes::class.java))
+                                finish()
+                            }
                         }
-                    } catch (e: RuntimeException) {}
+                    } catch (e: RuntimeException) {
                         storage.clearTokens(svInfo.address)
                     }
+                }
             }.start()
         }
         return token==null

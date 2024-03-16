@@ -134,7 +134,7 @@ class WebWorker() {
     }
 
     fun refreshAndPut(storage: ServerStorage):JsonObject {
-        val refreshResult = refreshToken(storage.activeServer!!.address, storage.getRefreshToken(storage.activeServer!!.address)!!)
+        val refreshResult = refreshToken(prepareLogin(storage.activeServer!!)!!, storage.getRefreshToken(storage.activeServer!!.address)!!)
         val obj = JsonParser.parseString(refreshResult).asJsonObject
         storage.setTokens(storage.activeServer!!.address, obj)
         return obj
