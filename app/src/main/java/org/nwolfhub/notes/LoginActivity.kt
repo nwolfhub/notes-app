@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
@@ -108,7 +109,8 @@ class LoginActivity : AppCompatActivity() {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             } else {
-
+                val obj = JsonParser.parseString(token).asJsonObject
+                storage.swtTokens(svInfo.address, obj.get("access_token").asString, obj.get("refresh_token").asString)
             }
         }.start()
     }

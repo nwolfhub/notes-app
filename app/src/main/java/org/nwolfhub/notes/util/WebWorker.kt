@@ -65,7 +65,7 @@ class WebWorker() {
         if(response.body!=null) {
             Log.d("Token exchange", "Response body: " + response.body!!.string())
             if(response.isSuccessful) {
-                return JsonParser.parseString(response.body!!.string()).asJsonObject.get("access_token").asString
+                return response.body!!.string();
             }
         }
         return null

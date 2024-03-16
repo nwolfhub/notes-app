@@ -23,6 +23,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ServerStorage {
+
+    /**
+     * Servers data is stored inside web_updated SharedPreferences
+     * Servers list is stored in servers as JsonArray of json-formatted objects.
+     * All tokens (including refresh tokens) are stored inside *server url*+tkn and *server url* + fresh
+     */
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
 
@@ -91,5 +97,22 @@ public class ServerStorage {
             selectServer(null);
         }
         preferences.edit().putString("servers", array.toString()).apply();
+    }
+
+    public void swtTokens(String server, String token, String refreshToken) {
+        preferences.edit()
+                .putString(server + "tkn", token)
+                .putString(server + "fresj", refreshToken)
+                .apply();
+    }
+
+    @Nullable
+    public String getToken(String server) {
+        return preferences.getString(server + "tkn", null);
+    }
+
+    @Nullable
+    public String getRefreshToken(String server) {
+        return preferences.getString(server + "fresh", null);
     }
 }
