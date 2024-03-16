@@ -11,16 +11,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.internal.bind.JsonTreeReader;
-import com.google.gson.reflect.TypeToken;
 
 import org.nwolfhub.notes.model.ServerInfo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ServerStorage {
 
@@ -104,10 +99,21 @@ public class ServerStorage {
         preferences.edit().putString("servers", array.toString()).apply();
     }
 
-    public void swtTokens(String server, String token, String refreshToken) {
+    public void setTokens(String server, String token, String refreshToken) {
         preferences.edit()
                 .putString(server + "tkn", token)
                 .putString(server + "fresj", refreshToken)
+                .apply();
+    }
+    public void setTokens(String server, JsonObject obj) {
+        setTokens(server, obj.get("access_token").getAsString(), obj.get("refresh_token").getAsString());
+        new WebWorker().postLogin(getActiveServer(), obj.get("access_token").getAsString());
+    }
+
+    public void clearTokens(String server) {
+        preferences.edit()
+                .remove(server + "tkn")
+                .remove(server + "fresh")
                 .apply();
     }
 

@@ -15,12 +15,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.JsonParser
-import okhttp3.OkHttpClient
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.ServerUtils
 import org.nwolfhub.notes.util.WebWorker
-import java.util.Arrays
 
 
 class LoginActivity : AppCompatActivity() {
@@ -63,7 +61,8 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, ServerSelect::class.java))
             finish()
         } else {
-            svInfo=timedSv;
+            svInfo=timedSv
+            checkLogin()
             val codes = ServerUtils().prepareCodes()
             Thread {
                 val url =
@@ -86,9 +85,28 @@ class LoginActivity : AppCompatActivity() {
         if(token!=null) {
             startCircle()
             Thread {
-                val me = WebWorker().getMe(svInfo, token)
+                val worker = WebWorker()
+                val me = worker.getMe(svInfo, token)
                 if(me==null) {
-
+                    val tokens = worker.refreshToken(svInfo.address, storage.getRefreshToken(svInfo.address)!!)
+                    if(tokens==null) {
+                        storage.clearTokens(svInfo.address)
+                        runOnUiThread {
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
+                    } else {
+                        storage.setTokens(svInfo.address, JsonParser.parseString(tokens).asJsonObject)
+                        runOnUiThread {
+                            startActivity(Intent(this, Notes::class.java))
+                            finish()
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        startActivity(Intent(this, Notes::class.java))
+                        finish()
+                    }
                 }
             }.start()
         }
@@ -126,7 +144,7 @@ class LoginActivity : AppCompatActivity() {
                 finish()
             } else {
                 val obj = JsonParser.parseString(token).asJsonObject
-                storage.swtTokens(svInfo.address, obj.get("access_token").asString, obj.get("refresh_token").asString)
+                storage.setTokens(svInfo.address, obj.get("access_token").asString, obj.get("refresh_token").asString)
                 WebWorker().postLogin(storage.activeServer!!, obj.get("access_token").asString)
                 startActivity(Intent(this, Notes::class.java))
                 finish()
