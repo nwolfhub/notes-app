@@ -15,6 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.JsonParser
+import org.nwolfhub.notes.deprecated.WebLogin
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.ServerUtils
@@ -61,7 +62,7 @@ class LoginActivity : AppCompatActivity() {
         if (timedSv == null) {
             startActivity(Intent(this, ServerSelect::class.java))
             finish()
-        } else {
+        } else if(!timedSv.version.equals("legacy")){
             svInfo=timedSv
             val cont = checkLogin()
             if(cont) {
@@ -79,6 +80,11 @@ class LoginActivity : AppCompatActivity() {
                     }
                 }.start()
             }
+        } else {
+            val webPref = getSharedPreferences("servers", MODE_PRIVATE)
+            webPref.edit().putString("servers", "Your server").putString("Your server", timedSv.address).commit()
+            startActivity(Intent(this, WebLogin::class.java))
+            finish()
         }
 
 

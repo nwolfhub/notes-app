@@ -27,6 +27,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.R
+import org.nwolfhub.notes.ServerSelect
 import org.nwolfhub.notes.deprecated.model.Server
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import java.util.Random
@@ -281,18 +282,18 @@ class WebLogin : AppCompatActivity() {
             this, android.R.layout.simple_spinner_item, servers.keys.stream().collect(Collectors.toList())
         )
         spinner.post {
-            spinner.setSelection(spinnerArrayAdapter.getPosition("Nwolfhub (official)"))
+            spinner.setSelection(spinnerArrayAdapter.getPosition("Your server"))
         }
         spinner.onItemSelectedListener = object: OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                if ((spinner.selectedItem as String).equals("servers")) {
+                if ((spinner.selectedItem as String) == "servers") {
                     PublicShared.counter++
                     if(PublicShared.counter >0) {
                         PublicShared.webActivity.runOnUiThread {
                             startActivity(
                                 Intent(
                                     PublicShared.webActivity,
-                                    ServerManageActivity::class.java
+                                    ServerSelect::class.java
                                 )
                             )
                             finish()

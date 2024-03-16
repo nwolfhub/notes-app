@@ -30,6 +30,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.R
+import org.nwolfhub.notes.ServerSelect
 import org.nwolfhub.notes.databinding.ActivityNotesBinding
 import org.nwolfhub.notes.deprecated.model.OldNote
 import org.nwolfhub.notes.deprecated.util.Cache
@@ -37,6 +38,7 @@ import org.nwolfhub.notes.deprecated.util.TestersApi
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.deprecated.util.WebCacher
 import org.nwolfhub.notes.deprecated.util.WebUtils
+import org.nwolfhub.notes.util.ServerStorage
 import java.lang.Exception
 
 class Notes : AppCompatActivity() {
@@ -70,7 +72,7 @@ class Notes : AppCompatActivity() {
         val welcomed = welcomedPref.getBoolean("welcomed", false)
         val serversPreferences = getSharedPreferences("servers", MODE_PRIVATE)
         if(serversPreferences.getString("servers", "").equals("")) {
-            serversPreferences.edit().putString("servers", "Nwolfhub (official)").putString("Nwolfhub (official)", "https://notes.nwolfhub.org").apply()
+            serversPreferences.edit().putString("servers", "Nwolfhub (official)").putString("Nwolfhub (official)", "https://notes-legacy.nwolfhub.org").apply()
             Log.d("servers scan", "No servers were found, added Nwolfhub to list")
         }
         if (!welcomed) {
@@ -83,7 +85,7 @@ class Notes : AppCompatActivity() {
         notes.addAll(cacher.getCachedNotes());
         recyclerView.adapter = NotesRecyclerAdapter(notes)
         findViewById<Button>(R.id.webtimed).setOnClickListener {
-            startActivity(Intent(this, WebInfo::class.java))
+            startActivity(Intent(this, ServerSelect::class.java))
             finish()
         }
         binding.fab.setOnClickListener {
