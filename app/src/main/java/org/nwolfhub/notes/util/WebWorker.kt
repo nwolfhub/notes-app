@@ -63,11 +63,23 @@ class WebWorker() {
                 .build()).build()).execute()
         Log.d("Token exchange", "Server responded with code " + response.code)
         if(response.body!=null) {
-            Log.d("Token exchange", "Response body: " + response.body!!.string())
+            val strigified = response.body!!.string()
+            Log.d("Token exchange", "Response body: " + strigified)
             if(response.isSuccessful) {
-                return response.body!!.string();
+                return strigified;
             }
         }
         return null
+    }
+
+    fun postLogin(server: ServerInfo, token: String) {
+        Thread {
+            val response = client.newCall(Request.Builder()
+                .url(VersionToMethod.versions[server.version]!!["postlogin"]!!)
+                .addHeader("Authorization", "Bearer $token")
+                .build())
+                .execute()
+            Log.d("PostLogin result", response.code.toString())
+        }.start()
     }
 }

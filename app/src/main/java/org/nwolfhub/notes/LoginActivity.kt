@@ -78,6 +78,8 @@ class LoginActivity : AppCompatActivity() {
 
 
     }
+
+
     fun startCircle() {
         val loader:ProgressBar = findViewById(R.id.afterLoginLoader)
         val webview:WebView = findViewById(R.id.loginWebView)
@@ -111,6 +113,9 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 val obj = JsonParser.parseString(token).asJsonObject
                 storage.swtTokens(svInfo.address, obj.get("access_token").asString, obj.get("refresh_token").asString)
+                WebWorker().postLogin(storage.activeServer!!, obj.get("access_token").asString)
+                startActivity(Intent(this, Notes::class.java))
+                finish()
             }
         }.start()
     }

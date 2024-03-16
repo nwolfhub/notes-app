@@ -54,6 +54,11 @@ public class ServerStorage {
         }
     }
 
+    public ServerInfo getServerByAddress(String address) {
+        if (address==null) return null;
+        return getServers().stream().filter(e -> e.address.equals(address)).findAny().orElse(null);
+    }
+
     @Nullable
     public ServerInfo getActiveServer() {
         String serverRaw = preferences.getString("server", null);
