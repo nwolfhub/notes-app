@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.animation.LinearInterpolator
+import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -70,6 +71,7 @@ class LoginActivity : AppCompatActivity() {
                 runOnUiThread {
                     Log.d("Codes", codes.toString())
                     val web = findViewById<WebView>(R.id.loginWebView)
+                    CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
                     web.webViewClient = MyWebViewClient(verifier = codes[1])
                     web.loadUrl(url)
                 }
@@ -79,10 +81,22 @@ class LoginActivity : AppCompatActivity() {
 
     }
 
+    fun checkLogin() {
+        val token = storage.getToken(svInfo.address)
+        if(token!=null) {
+            startCircle()
+            Thread {
+                val me = WebWorker().getMe(svInfo, token)
+                if(me==null) {
 
+                }
+            }.start()
+        }
+    }
     fun startCircle() {
         val loader:ProgressBar = findViewById(R.id.afterLoginLoader)
         val webview:WebView = findViewById(R.id.loginWebView)
+        webview.isEnabled=false;
         loader.animate().apply {
             interpolator = LinearInterpolator()
             duration = 500

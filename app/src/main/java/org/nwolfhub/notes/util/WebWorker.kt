@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.nwolfhub.notes.model.ServerInfo
+import org.nwolfhub.notes.model.User
 import org.nwolfhub.notes.model.VersionToMethod
 import java.net.URLEncoder
 
@@ -75,11 +76,56 @@ class WebWorker() {
     fun postLogin(server: ServerInfo, token: String) {
         Thread {
             val response = client.newCall(Request.Builder()
-                .url(VersionToMethod.versions[server.version]!!["postlogin"]!!)
+                .url(server.address + VersionToMethod.versions[server.version]!!["postlogin"]!!)
                 .addHeader("Authorization", "Bearer $token")
                 .build())
                 .execute()
             Log.d("PostLogin result", response.code.toString())
         }.start()
+    }
+
+    fun getMe(server: ServerInfo, token: String): User? {
+        val response = client.newCall(Request.Builder()
+            .url(server.address + VersionToMethod.versions[server.version]!!["getme"]!!)
+            .addHeader("Authorization", "Bearer $token")
+            .build())
+            .execute()
+        if(!response.isSuccessful) {
+            if(response.body!=null) {
+                Log.d("getMe", "Fail: " + response.body!!.string())
+                return null
+            } else {
+                Log.d("getMe", "Fail: " + response.code)
+            }
+        }
+        val body = response.body!!.string()
+        Log.d("getMe", body)
+        val obj = JsonParser.parseString(body).asJsonObject
+        val user = User()
+        user
+            .setId(obj.get("id").asString)
+            .setUsername(obj.get("username").asString)
+            .setFirstname(obj.get("name").asString)
+        return user
+    }
+
+    fun refreshToken(url:String, refresh: String):String? {
+        Log.d("Token refresh", "Original: " + url + ", replaced: " + url.replace("/auth", "/token"))
+        val response = client.newCall(Request.Builder()
+            .url(url.replace("/auth", "/token"))
+            .post(FormBody.Builder()
+                .add("grant_type", "refresh_token")
+                .add("client_id", "notes")
+                .add("refresh_token", refresh)
+                .build()).build()).execute()
+        Log.d("Token refresh", "Server responded with code " + response.code)
+        if(response.body!=null) {
+            val strigified = response.body!!.string()
+            Log.d("Token refresh", "Response body: " + strigified)
+            if(response.isSuccessful) {
+                return strigified;
+            }
+        }
+        return null
     }
 }
