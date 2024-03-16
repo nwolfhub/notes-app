@@ -10,6 +10,7 @@ import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.internal.userAgent
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.model.User
 import org.nwolfhub.notes.model.VersionToMethod
@@ -65,7 +66,7 @@ class WebWorker() {
         Log.d("Token exchange", "Server responded with code " + response.code)
         if(response.body!=null) {
             val strigified = response.body!!.string()
-            Log.d("Token exchange", "Response body: " + strigified)
+            Log.d("Token exchange", "Response body: $strigified")
             if(response.isSuccessful) {
                 return strigified;
             }
@@ -84,7 +85,7 @@ class WebWorker() {
         }.start()
     }
 
-    fun getMe(server: ServerInfo, token: String): User? {
+    fun getMe(server: ServerInfo, token: String): User {
         val response = client.newCall(Request.Builder()
             .url(server.address + VersionToMethod.versions[server.version]!!["getme"]!!)
             .addHeader("Authorization", "Bearer $token")
@@ -93,10 +94,10 @@ class WebWorker() {
         if(!response.isSuccessful) {
             if(response.body!=null) {
                 Log.d("getMe", "Fail: " + response.body!!.string())
-                return null
             } else {
                 Log.d("getMe", "Fail: " + response.code)
             }
+            throw RuntimeException(response.code.toString())
         }
         val body = response.body!!.string()
         Log.d("getMe", body)
@@ -109,7 +110,7 @@ class WebWorker() {
         return user
     }
 
-    fun refreshToken(url:String, refresh: String):String? {
+    fun refreshToken(url:String, refresh: String):String {
         Log.d("Token refresh", "Original: " + url + ", replaced: " + url.replace("/auth", "/token"))
         val response = client.newCall(Request.Builder()
             .url(url.replace("/auth", "/token"))
@@ -119,13 +120,31 @@ class WebWorker() {
                 .add("refresh_token", refresh)
                 .build()).build()).execute()
         Log.d("Token refresh", "Server responded with code " + response.code)
+        if(!response.isSuccessful) {
+            throw RuntimeException(response.code.toString())
+        }
         if(response.body!=null) {
             val strigified = response.body!!.string()
-            Log.d("Token refresh", "Response body: " + strigified)
+            Log.d("Token refresh", "Response body: $strigified")
             if(response.isSuccessful) {
                 return strigified;
             }
         }
-        return null
+        return "" //should be unreachable all the times
+    }
+
+    fun refreshAndPut(storage: ServerStorage):JsonObject {
+        val refreshResult = refreshToken(storage.activeServer!!.address, storage.getRefreshToken(storage.activeServer!!.address)!!)
+        val obj = JsonParser.parseString(refreshResult).asJsonObject
+        storage.setTokens(storage.activeServer!!.address, obj)
+        return obj
+    }
+
+    fun beginRefresh(storage: ServerStorage) {
+        Thread {
+            while (true) {
+                val refreshResult = refreshAndPut(storage);
+            }
+        }.start()
     }
 }

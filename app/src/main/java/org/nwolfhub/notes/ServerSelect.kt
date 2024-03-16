@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -113,25 +114,36 @@ class ServerSelect : AppCompatActivity() {
             urlInput.setText(prevUrl)
         }
         urlInput.inputType = InputType.TYPE_TEXT_VARIATION_URI
-        val builder = AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle("Create new server")
             .setMessage("Type the server uri")
             .setView(urlInput)
             .setPositiveButton("Ok", DialogInterface.OnClickListener { _, _ ->
                 run {
-                    if (urlInput.text.toString().contains("https://") || urlInput.text.contains("http://")) {
-                        try {
-                            Thread {
-                                val svInfo = ServerUtils().readServer(urlInput.text.toString())
-                                runOnUiThread {
-                                    serverStorage.addServer(svInfo)
-                                    loadServerList()
+                    try {
+                        Thread {
+                            var resultText = urlInput.text.toString()
+                            if (!resultText.contains("https://")) {
+                                if (resultText.contains("http") && !resultText.contains("https")) {
+                                    resultText = resultText.replace("http", "https")
+                                } else {
+                                    if (resultText.contains("http")) Toast.makeText(
+                                        this,
+                                        "Errors detected in url. Expect app to crash",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    else resultText = "https://$resultText"
                                 }
-                            }.start()
-                        } catch (e:Exception) {
-                            Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
-                            createNewServerInterface(urlInput.text.toString())
-                        }
+                            }
+                            val svInfo = ServerUtils().readServer(resultText)
+                            runOnUiThread {
+                                serverStorage.addServer(svInfo)
+                                loadServerList()
+                            }
+                        }.start()
+                    } catch (e: Exception) {
+                        Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+                        createNewServerInterface(urlInput.text.toString())
                     }
                 }
             })

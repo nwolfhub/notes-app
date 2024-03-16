@@ -102,7 +102,7 @@ public class ServerStorage {
     public void setTokens(String server, String token, String refreshToken) {
         preferences.edit()
                 .putString(server + "tkn", token)
-                .putString(server + "fresj", refreshToken)
+                .putString(server + "fresh", refreshToken)
                 .apply();
     }
     public void setTokens(String server, JsonObject obj) {

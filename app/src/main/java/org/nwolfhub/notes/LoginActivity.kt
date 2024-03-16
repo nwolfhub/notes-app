@@ -19,6 +19,7 @@ import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.ServerUtils
 import org.nwolfhub.notes.util.WebWorker
+import java.util.concurrent.LinkedBlockingQueue
 
 
 class LoginActivity : AppCompatActivity() {
@@ -62,55 +63,56 @@ class LoginActivity : AppCompatActivity() {
             finish()
         } else {
             svInfo=timedSv
-            checkLogin()
-            val codes = ServerUtils().prepareCodes()
-            Thread {
-                val url =
-                    WebWorker().prepareLogin(svInfo) + "?response_type=code&client_id=notes&code_challenge_method=S256&code_challenge=" + codes[0]
-                runOnUiThread {
-                    Log.d("Codes", codes.toString())
-                    val web = findViewById<WebView>(R.id.loginWebView)
-                    CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
-                    web.getSettings().domStorageEnabled = true;
-                    web.webViewClient = MyWebViewClient(verifier = codes[1])
-                    web.loadUrl(url)
-                }
-            }.start()
+            val cont = checkLogin()
+            if(cont) {
+                val codes = ServerUtils().prepareCodes()
+                Thread {
+                    val url =
+                        WebWorker().prepareLogin(svInfo) + "?response_type=code&client_id=notes&code_challenge_method=S256&code_challenge=" + codes[0]
+                    runOnUiThread {
+                        Log.d("Codes", codes.toString())
+                        val web = findViewById<WebView>(R.id.loginWebView)
+                        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
+                        web.getSettings().domStorageEnabled = true;
+                        web.webViewClient = MyWebViewClient(verifier = codes[1])
+                        web.loadUrl(url)
+                    }
+                }.start()
+            }
         }
 
 
     }
 
-    fun checkLogin() {
+    fun checkLogin():Boolean {
         val token = storage.getToken(svInfo.address)
         if(token!=null) {
             startCircle()
             Thread {
                 val worker = WebWorker()
-                val me = worker.getMe(svInfo, token)
-                if(me==null) {
-                    val tokens = worker.refreshToken(svInfo.address, storage.getRefreshToken(svInfo.address)!!)
-                    if(tokens==null) {
-                        storage.clearTokens(svInfo.address)
-                        runOnUiThread {
-                            startActivity(Intent(this, MainActivity::class.java))
-                            finish()
-                        }
-                    } else {
+                try {
+                    worker.getMe(svInfo, token)
+                    runOnUiThread {
+                        startActivity(Intent(this, Notes::class.java))
+                        finish()
+                    }
+                } catch (e: RuntimeException){
+                    try {
+                        val tokens = worker.refreshToken(
+                            worker.prepareLogin(svInfo).toString(),
+                            storage.getRefreshToken(svInfo.address)!!
+                        )
                         storage.setTokens(svInfo.address, JsonParser.parseString(tokens).asJsonObject)
                         runOnUiThread {
                             startActivity(Intent(this, Notes::class.java))
                             finish()
                         }
+                    } catch (e: RuntimeException) {}
+                        storage.clearTokens(svInfo.address)
                     }
-                } else {
-                    runOnUiThread {
-                        startActivity(Intent(this, Notes::class.java))
-                        finish()
-                    }
-                }
             }.start()
         }
+        return token==null
     }
     fun startCircle() {
         val loader:ProgressBar = findViewById(R.id.afterLoginLoader)
