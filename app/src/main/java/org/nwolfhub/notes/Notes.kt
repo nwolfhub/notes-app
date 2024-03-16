@@ -1,6 +1,8 @@
 package org.nwolfhub.notes
 
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,5 +18,9 @@ class Notes : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        //load resources
+        val stateText = findViewById<TextView>(R.id.connectionStateText)
+        val state = findViewById<View>(R.id.connectionState)
+
     }
 }
