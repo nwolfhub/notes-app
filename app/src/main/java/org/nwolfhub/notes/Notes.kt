@@ -3,17 +3,28 @@ package org.nwolfhub.notes
 import android.animation.ArgbEvaluator
 import android.animation.TimeAnimator
 import android.animation.ValueAnimator
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.webkit.CookieManager
+import android.webkit.CookieSyncManager
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.WebWorker
+import org.nwolfhub.utils.TextAction
+import org.nwolfhub.utils.Utils
+
 
 class Notes : AppCompatActivity() {
     lateinit var storage:ServerStorage
@@ -37,16 +48,75 @@ class Notes : AppCompatActivity() {
         val worker = WebWorker()
 
         //begin syncing
+        updateUserInfo(0)
+        // TODO: sync notes, cache
+
+        //Buttons click listeners, etc
+        state.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Pick action")
+                .setPositiveButton("logout") { _, _, ->
+                    run {
+                        clearCookies()
+                        storage.clearTokens(storage.activeServer!!.address)
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                }.show()
+        }
+    }
+
+    private fun updateUserInfo(attempts: Int) {
+        val worker = WebWorker()
+        val state = findViewById<View>(R.id.connectionState)
+        val stateText = findViewById<TextView>(R.id.connectionStateText)
         Thread() {
+            Log.d("updateUserInfo", "Thread launched")
             try {
                 val me = worker.getMe(svInfo, token)
+                Log.d("updateUserInfo", "Obtained user " + me.username)
+                runOnUiThread {
+                    animateGradient(state, 3)
+                }
+                Utils.typeText(stateText.text.toString(), true, "", "Welcome, " + me.firstname, 60, 50, 0, object: TextAction() {
+                    override fun applyText(text: String?) {
+                        runOnUiThread {
+                            stateText.text = text
+                        }
+                    }
+                })
             } catch (e:RuntimeException) {
+                Log.d("updateUserInfo", "Exception: $e")
                 if(e.equals("401")) {
-
+                    runOnUiThread {
+                        animateGradient(state, 1)
+                    }
+                    try {
+                        worker.refreshAndPut(storage)
+                        updateUserInfo(attempts+1)
+                    } catch (e: RuntimeException) {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                } else if(e.equals("400")) {
+                    if(attempts>=1) {
+                        runOnUiThread {
+                            animateGradient(state, 4)
+                        }
+                        Utils.typeText(stateText.text.toString(), true, "", "Failed to connect to server", 60, 50, 0, object: TextAction() {
+                            override fun applyText(text: String?) {
+                                runOnUiThread {
+                                    stateText.text = text
+                                }
+                            }
+                        })
+                    } else {
+                        Thread.sleep(1000)
+                        updateUserInfo(attempts+1)
+                    }
                 }
             }
-        }
-
+        }.start()
     }
 
 
@@ -66,9 +136,9 @@ class Notes : AppCompatActivity() {
                 end = Color.WHITE
             }
             3 -> {
-                start = Color.GREEN
+                start = Color.WHITE
                 mid = Color.GREEN
-                end = Color.BLUE
+                end = Color.CYAN
             }
             4 -> {
                 start = Color.RED
@@ -79,7 +149,11 @@ class Notes : AppCompatActivity() {
         val gradient = view.background as GradientDrawable
         val evaluator = ArgbEvaluator()
         val animator = TimeAnimator.ofFloat(-1.0f, 1.0f)
-        animator.duration = 1000
+        if(colors==3) {
+            animator.duration=5000;
+        } else {
+            animator.duration = 1000
+        }
         animator.repeatCount = ValueAnimator.INFINITE
         animator.repeatMode = ValueAnimator.REVERSE
         animator.addUpdateListener {
@@ -91,5 +165,9 @@ class Notes : AppCompatActivity() {
         }
 
         animator.start()
+    }
+    fun clearCookies() {
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
     }
 }
