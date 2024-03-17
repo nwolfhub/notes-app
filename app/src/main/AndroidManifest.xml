@@ -29,6 +29,7 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
+            android:label="@string/title_activity_notes"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -59,13 +60,9 @@
         <activity
             android:name=".deprecated.Notes"
             android:exported="true"
-            android:label="@string/title_activity_notes"
-            android:theme="@style/Theme.Notes">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:theme="@style/Theme.Notes">
+
         </activity>
         <activity
             android:name=".deprecated.Welcome"

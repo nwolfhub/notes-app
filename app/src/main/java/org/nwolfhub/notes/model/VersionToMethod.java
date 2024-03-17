@@ -15,6 +15,7 @@ public class VersionToMethod {
         v1.put("getme", "/api/v1/users/getMe");
         v1.put("postlogin", "/api/v1/users/postLogin");
         v1.put("get", "/api/v1/notes/{id}/get");
+        v1.put("getnotes", "/api/v1/notes/getNotes");
         versions.put("1", v1);
     }
 }

@@ -47,7 +47,18 @@ public class NotesStorage {
     }
 
     public void addNote(@NonNull Note note) {
-        notesPref.edit().putString(note.serverAddr + note.getMe().getId() + note.getId(), gson.toJson(note)).apply();
+        Note prevNote = getNote(note.serverAddr, note.me.id, note.id);
+        if(prevNote!=null) {
+            if(prevNote.syncState==Note.SyncState.local) {
+                if(prevNote.edited>note.edited) {
+                    addNoteToSyncQueue(note);
+                }
+            } else {
+                notesPref.edit().putString(note.serverAddr + note.getMe().getId() + note.getId(), gson.toJson(note)).apply();
+            }
+        } else {
+            notesPref.edit().putString(note.serverAddr + note.getMe().getId() + note.getId(), gson.toJson(note)).apply();
+        }
     }
 
     public void addNoteToSyncQueue(@NonNull Note note) {

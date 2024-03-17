@@ -20,9 +20,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.deprecated.util.UpdateColors
+import org.nwolfhub.notes.model.Note
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.util.NotesAdapter
+import org.nwolfhub.notes.util.NotesStorage
 import org.nwolfhub.notes.util.ServerStorage
+import org.nwolfhub.notes.util.WebCacher
 import org.nwolfhub.notes.util.WebWorker
 import org.nwolfhub.utils.TextAction
 import org.nwolfhub.utils.Utils
@@ -33,6 +36,7 @@ class Notes : AppCompatActivity() {
     lateinit var svInfo:ServerInfo
     lateinit var token: String
     lateinit var refreshToken: String
+    lateinit var cacher: WebCacher
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
@@ -46,13 +50,13 @@ class Notes : AppCompatActivity() {
         svInfo = storage.activeServer!!
         token = storage.getToken(svInfo.address)!!
         refreshToken = storage.getRefreshToken(svInfo.address)!!
+        val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
         animateGradient(state, 2)
-        val worker = WebWorker()
 
         //begin syncing
         updateUserInfo(0)
-        // TODO: sync notes, cache
-        /*val dataset = arrayOf<Note>()
+
+        /*val dataset =
         val adapter = NotesAdapter(dataset)
         val recyclerView: RecyclerView = findViewById(R.id.notesList)
         recyclerView.adapter=adapter*/
@@ -69,6 +73,7 @@ class Notes : AppCompatActivity() {
                         finish()
                     }
                 }.show()
+
         }
     }
 

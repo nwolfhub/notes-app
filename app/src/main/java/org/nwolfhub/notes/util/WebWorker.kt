@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.internal.userAgent
+import org.nwolfhub.notes.model.Note
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.model.User
 import org.nwolfhub.notes.model.VersionToMethod
@@ -37,7 +38,10 @@ class WebWorker() {
         if(response.isSuccessful) {
             return JsonParser.parseString(response.body!!.string()).asJsonObject.get("id").asString
         } else {
-            throw RuntimeException(response.body?.string() ?: response.code.toString())
+            if(response.body!=null) {
+                Log.e("Note create", response.body!!.string())
+            }
+            throw RuntimeException(response.code.toString())
         }
     }
 
@@ -49,7 +53,74 @@ class WebWorker() {
                 .post(content.toRequestBody())
                 .build()).execute();
         if(!response.isSuccessful) {
-            throw RuntimeException(response.body?.string() ?: response.code.toString())
+            if(response.body!=null) {
+                Log.e("Note edit", response.body!!.string())
+            }
+            throw RuntimeException(response.code.toString())
+        }
+    }
+
+    fun getNotes(server: ServerInfo, token: String): List<String> {
+        val response = client.newCall(Request.Builder()
+            .url(server.address + VersionToMethod.versions[server.version]!!["getnotes"])
+            .addHeader("Authorization", "Bearer $token")
+            .build()).execute()
+        if(!response.isSuccessful) {
+            Log.e("Notes fetch", "Server responded with code: ${response.code}")
+            if(response.body!=null) {
+                Log.e("Notes fetch", response.body!!.string())
+            }
+            throw RuntimeException(response.code.toString())
+        }
+        try {
+            val list = mutableListOf<String>()
+            val body = response.body!!.string()
+            val arr = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
+            for(e in arr) {
+                val noteObj = e.asJsonObject
+                list.add(noteObj.get("id").asString)
+            }
+            return list
+        } catch (e: NullPointerException) {
+            Log.e("Notes fetch", e.toString())
+            throw RuntimeException("Wrong response")
+        }
+    }
+
+    fun getNote(id: String, server: ServerInfo, token: String): Note {
+        val response = client.newCall(Request.Builder()
+            .url(server.address + VersionToMethod.versions[server.version]!!["get"]!!.replace("{id}", id))
+            .addHeader("Authorization", "Bearer $token")
+            .build()).execute()
+        if(!response.isSuccessful) {
+            Log.e("Note fetch", "Server responded with code: ${response.code}")
+            if(response.body!=null) {
+                Log.e("Note fetch", response.body!!.string())
+            }
+            throw RuntimeException(response.code.toString())
+        } else {
+            try {
+                val note = Note()
+                val body = response.body!!.string()
+                Log.d("Note fetch", "Server response: $body")
+                val obj = JsonParser.parseString(body).asJsonObject
+                note
+                    .setId(obj.get("id").asString)
+                    .setContent(obj.get("content").asString)
+                    .setName(obj.get("name").asString)
+                    .setCreated(obj.get("created").asLong)
+                    .setEdited(obj.get("edited").asLong)
+                    .setServerAddr(server.address)
+                    .setOwner(User()
+                        .setId(obj.get("owner").asJsonObject.get("id").asString)
+                        .setFirstname(obj.get("owner").asJsonObject.get("name").asString)
+                        .setUsername(obj.get("owner").asJsonObject.get("username").asString))
+                    .setSyncState(Note.SyncState.synced)
+                return note
+            } catch (e: NullPointerException) {
+                Log.e("Notes fetch", e.toString())
+                throw RuntimeException("Wrong response")
+            }
         }
     }
 
