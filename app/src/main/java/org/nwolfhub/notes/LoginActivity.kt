@@ -113,6 +113,10 @@ class LoginActivity : AppCompatActivity() {
                         }
                     } catch (e: RuntimeException) {
                         storage.clearTokens(svInfo.address)
+                        runOnUiThread {
+                            startActivity(Intent(this, Notes::class.java))
+                            finish()
+                        }
                     }
                 }
             }.start()

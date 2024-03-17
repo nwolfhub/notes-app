@@ -18,8 +18,10 @@ import android.webkit.CookieSyncManager
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.model.ServerInfo
+import org.nwolfhub.notes.util.NotesAdapter
 import org.nwolfhub.notes.util.ServerStorage
 import org.nwolfhub.notes.util.WebWorker
 import org.nwolfhub.utils.TextAction
@@ -50,6 +52,10 @@ class Notes : AppCompatActivity() {
         //begin syncing
         updateUserInfo(0)
         // TODO: sync notes, cache
+        /*val dataset = arrayOf<Note>()
+        val adapter = NotesAdapter(dataset)
+        val recyclerView: RecyclerView = findViewById(R.id.notesList)
+        recyclerView.adapter=adapter*/
 
         //Buttons click listeners, etc
         state.setOnClickListener {
@@ -98,7 +104,7 @@ class Notes : AppCompatActivity() {
                         startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
-                } else if(e.equals("400")) {
+                } else if(e.equals("400") || e.equals("404")) {
                     if(attempts>=1) {
                         runOnUiThread {
                             animateGradient(state, 4)
