@@ -6,6 +6,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.model.Note
 import org.nwolfhub.notes.model.ServerInfo
+import org.nwolfhub.notes.model.User
 import org.nwolfhub.notes.util.NotesAdapter
 import org.nwolfhub.notes.util.NotesStorage
 import org.nwolfhub.notes.util.ServerStorage
@@ -37,6 +39,7 @@ class Notes : AppCompatActivity() {
     lateinit var token: String
     lateinit var refreshToken: String
     lateinit var cacher: WebCacher
+    private var cState = 0;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
@@ -50,17 +53,18 @@ class Notes : AppCompatActivity() {
         svInfo = storage.activeServer!!
         token = storage.getToken(svInfo.address)!!
         refreshToken = storage.getRefreshToken(svInfo.address)!!
+        val userPref = getSharedPreferences("userData", MODE_PRIVATE)
         val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
+        cacher = WebCacher(storage, notesStorage, User().setId(userPref.getString("currentUser", null)), svInfo)
+        cState = 2
         animateGradient(state, 2)
 
         //begin syncing
         updateUserInfo(0)
 
-        /*val dataset =
-        val adapter = NotesAdapter(dataset)
-        val recyclerView: RecyclerView = findViewById(R.id.notesList)
-        recyclerView.adapter=adapter*/
 
+        //load notes list
+        reloadList(notesStorage, userPref)
         //Buttons click listeners, etc
         state.setOnClickListener {
             AlertDialog.Builder(this)
@@ -86,9 +90,6 @@ class Notes : AppCompatActivity() {
             try {
                 val me = worker.getMe(svInfo, token)
                 Log.d("updateUserInfo", "Obtained user " + me.username)
-                runOnUiThread {
-                    animateGradient(state, 3)
-                }
                 Utils.typeText(stateText.text.toString(), true, "", "Welcome, " + me.firstname, 60, 50, 0, object: TextAction() {
                     override fun applyText(text: String?) {
                         runOnUiThread {
@@ -100,6 +101,7 @@ class Notes : AppCompatActivity() {
                 Log.d("updateUserInfo", "Exception: $e")
                 if(e.equals("401")) {
                     runOnUiThread {
+                        cState=1
                         animateGradient(state, 1)
                     }
                     try {
@@ -112,6 +114,7 @@ class Notes : AppCompatActivity() {
                 } else if(e.equals("400") || e.equals("404")) {
                     if(attempts>=1) {
                         runOnUiThread {
+                            cState=4
                             animateGradient(state, 4)
                         }
                         Utils.typeText(stateText.text.toString(), true, "", "Failed to connect to server", 60, 50, 0, object: TextAction() {
@@ -127,7 +130,15 @@ class Notes : AppCompatActivity() {
                     }
                 }
             }
+            runOnUiThread {beginNoteFetch()}
         }.start()
+    }
+
+    private fun reloadList(notesStorage: NotesStorage, userPref: SharedPreferences) {
+        val dataset = notesStorage.getNotes(svInfo.address, userPref.getString("currentUser", null))
+        val adapter = NotesAdapter(dataset.toTypedArray())
+        val recyclerView: RecyclerView = findViewById(R.id.notesList)
+        recyclerView.adapter=adapter
     }
 
 
@@ -180,5 +191,31 @@ class Notes : AppCompatActivity() {
     fun clearCookies() {
         CookieManager.getInstance().removeAllCookies(null)
         CookieManager.getInstance().flush()
+    }
+
+    private fun beginNoteFetch() {
+        val userPref = getSharedPreferences("userData", MODE_PRIVATE)
+        val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
+        val state = findViewById<View>(R.id.connectionState)
+        cState=1
+        animateGradient(state, 1)
+        Thread() {
+            var begin = true
+            Thread() {
+                while (begin) {
+                    runOnUiThread {
+                        reloadList(notesStorage, userPref)
+                    }
+                    Thread.sleep(100)
+                }
+            }.start()
+            cacher.fetchNotes()
+            Thread.sleep(500)
+            if(cState==2 || cState==1) runOnUiThread {
+                animateGradient(state, 3)
+                cState=3
+            }
+            begin = false
+        }.start()
     }
 }

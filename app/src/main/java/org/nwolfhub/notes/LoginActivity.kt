@@ -54,7 +54,6 @@ class LoginActivity : AppCompatActivity() {
         })
 
         //initialize all the stuff
-        val pref = getSharedPreferences("web_updated", MODE_PRIVATE)
         storage = ServerStorage(getSharedPreferences("web_updated", MODE_PRIVATE))
         val timedSv = storage.activeServer;
         Log.d("Active server", timedSv?.address ?: "null")
@@ -97,16 +96,19 @@ class LoginActivity : AppCompatActivity() {
             Thread {
                 val worker = WebWorker()
                 try {
-                    worker.getMe(svInfo, token)
+                    val me = worker.getMe(svInfo, token)
                     runOnUiThread {
+                        getSharedPreferences("userData", MODE_PRIVATE).edit().putString("currentUser", me.getId()).apply()
                         startActivity(Intent(this, Notes::class.java))
                         finish()
                     }
                 } catch (e: RuntimeException) {
                     try {
                         val result = worker.refreshAndPut(storage)
+                        val me = worker.getMe(svInfo, token)
                         if (result.has("access_token")) { //always true. Forces this shit not to run
                             runOnUiThread {
+                                getSharedPreferences("userData", MODE_PRIVATE).edit().putString("currentUser", me.getId()).apply()
                                 startActivity(Intent(this, Notes::class.java))
                                 finish()
                             }
@@ -114,7 +116,7 @@ class LoginActivity : AppCompatActivity() {
                     } catch (e: RuntimeException) {
                         storage.clearTokens(svInfo.address)
                         runOnUiThread {
-                            startActivity(Intent(this, Notes::class.java))
+                            startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         }
                     }
@@ -158,8 +160,16 @@ class LoginActivity : AppCompatActivity() {
                 val obj = JsonParser.parseString(token).asJsonObject
                 storage.setTokens(svInfo.address, obj.get("access_token").asString, obj.get("refresh_token").asString)
                 WebWorker().postLogin(storage.activeServer!!, obj.get("access_token").asString)
+                try {
+                    val me = WebWorker().getMe(svInfo, obj.get("access_token").asString)
+                    getSharedPreferences("userData", MODE_PRIVATE).edit()
+                        .putString("currentUser", me.getId()).apply()
                 startActivity(Intent(this, Notes::class.java))
                 finish()
+                } catch (e: NullPointerException) {
+                    e.printStackTrace()
+                    startActivity(Intent(this, ServerSelect::class.java))
+                }
             }
         }.start()
     }
