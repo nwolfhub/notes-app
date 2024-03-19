@@ -75,4 +75,8 @@ public class NotesStorage {
         }
     }
 
+    public void deleteNote(String id) {
+        notesPref.edit().remove(id).apply();
+    }
+
 }

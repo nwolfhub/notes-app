@@ -31,6 +31,7 @@ import org.nwolfhub.notes.util.WebCacher
 import org.nwolfhub.notes.util.WebWorker
 import org.nwolfhub.utils.TextAction
 import org.nwolfhub.utils.Utils
+import java.util.Date
 
 
 class Notes : AppCompatActivity() {
@@ -76,7 +77,12 @@ class Notes : AppCompatActivity() {
                         startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
-                }.show()
+                }
+                    .setNegativeButton("Sync") { _, _, ->
+                        run {
+                            reloadList(notesStorage, userPref)
+                        }
+                    }.show()
 
         }
     }
@@ -130,7 +136,8 @@ class Notes : AppCompatActivity() {
                     }
                 }
             }
-            runOnUiThread {beginNoteFetch()}
+            val userPref = getSharedPreferences("userData", MODE_PRIVATE)
+            if(userPref.getLong("lastSync", 0)+86400000<Date().time) runOnUiThread {beginNoteFetch(userPref)}
         }.start()
     }
 
@@ -193,8 +200,7 @@ class Notes : AppCompatActivity() {
         CookieManager.getInstance().flush()
     }
 
-    private fun beginNoteFetch() {
-        val userPref = getSharedPreferences("userData", MODE_PRIVATE)
+    private fun beginNoteFetch(userPref: SharedPreferences) {
         val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
         val state = findViewById<View>(R.id.connectionState)
         cState=1

@@ -163,7 +163,8 @@ class LoginActivity : AppCompatActivity() {
                 try {
                     val me = WebWorker().getMe(svInfo, obj.get("access_token").asString)
                     getSharedPreferences("userData", MODE_PRIVATE).edit()
-                        .putString("currentUser", me.getId()).apply()
+                        .putString("currentUser", me.getId())
+                        .putLong("lastSync", 0).apply()
                 startActivity(Intent(this, Notes::class.java))
                 finish()
                 } catch (e: NullPointerException) {

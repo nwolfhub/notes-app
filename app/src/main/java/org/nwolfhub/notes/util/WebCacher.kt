@@ -15,9 +15,19 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
                 serverStorage.getToken(server.address).toString()
             )
             Log.d("Fetch notes", "Got list of notes with length ${rawNotes.size}")
+            val rebuilt = mutableListOf<String>()
             for(noteId in rawNotes) {
-                storage.addNote(fetchNote(noteId))
+                val note = fetchNote(noteId)
+                storage.addNote(note)
+                rebuilt.add(note.id)
                 Log.d("Fetch notes", "Fetched note $noteId")
+            }
+            for(note in storage.getNotes(server.address, me.getId())) {
+                if(!rebuilt.contains(note.id)) {
+                    if(note.syncState==Note.SyncState.synced) {
+                        storage.deleteNote(note.id)
+                    }
+                }
             }
         } catch (e: RuntimeException) {
             if(e.equals("401")) {
