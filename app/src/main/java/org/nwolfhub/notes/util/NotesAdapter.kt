@@ -1,14 +1,17 @@
 package org.nwolfhub.notes.util
 
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.compose.material3.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import org.nwolfhub.notes.Notes
 import org.nwolfhub.notes.R
+import org.nwolfhub.notes.ServerSelect
 import org.nwolfhub.notes.model.Note
 
 class NotesAdapter (private val dataset: Array<Note>, private val cacher: WebCacher, private val context: Context) : RecyclerView.Adapter<NotesAdapter.ViewHolder>() {
@@ -38,8 +41,14 @@ class NotesAdapter (private val dataset: Array<Note>, private val cacher: WebCac
         holder.noteName.text=dataset[position].name
         holder.id = dataset[position].id
         holder.itemView.setOnLongClickListener {
-            holder.noteName.text=""
-            
+            AlertDialog.Builder(context)
+                .setTitle("Pick action")
+                .setPositiveButton("Delete") { _, _, ->
+                    run {
+                        cacher.deleteNote(dataset[position].id)
+                    }
+                }
+                .show()
             true
         }
     }

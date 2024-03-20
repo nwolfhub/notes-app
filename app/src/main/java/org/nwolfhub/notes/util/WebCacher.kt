@@ -1,6 +1,7 @@
 package org.nwolfhub.notes.util
 
 import android.util.Log
+import okhttp3.internal.cacheGet
 import org.nwolfhub.notes.model.Note
 import org.nwolfhub.notes.model.ServerInfo
 import org.nwolfhub.notes.model.User
@@ -25,7 +26,7 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
             for(note in storage.getNotes(server.address, me.getId())) {
                 if(!rebuilt.contains(note.id)) {
                     if(note.syncState==Note.SyncState.synced) {
-                        storage.deleteNote(note.id)
+                        storage.deleteNote(server.address, me.id, note.id)
                     }
                 }
             }
@@ -65,6 +66,18 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
                 } else {
                     element = storage.popNoteFromQueue()
                 }
+            }
+        }
+    }
+
+    fun deleteNote(id: String) {
+        val note = storage.getNote(server.address, me.id, id)
+        if(note!=null) {
+            try {
+                worker.deleteNote(server, id, serverStorage.getToken(server.address).toString())
+                storage.deleteNote(server.address, me.id, note.id)
+            } catch (e: RuntimeException) {
+                if(e.equals("401"))  {reloadToken(); deleteNote(id)}
             }
         }
     }

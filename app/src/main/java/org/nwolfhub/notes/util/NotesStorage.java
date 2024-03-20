@@ -75,8 +75,8 @@ public class NotesStorage {
         }
     }
 
-    public void deleteNote(String id) {
-        notesPref.edit().remove(id).apply();
+    public void deleteNote(String server, String me, String id) {
+        notesPref.edit().remove(server + me + id).apply();
     }
 
 }

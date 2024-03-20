@@ -137,13 +137,16 @@ class Notes : AppCompatActivity() {
                 }
             }
             val userPref = getSharedPreferences("userData", MODE_PRIVATE)
-            if(userPref.getLong("lastSync", 0)+86400000<Date().time) runOnUiThread {beginNoteFetch(userPref)}
+            if(userPref.getLong("lastSync", 0)+86400000<Date().time) runOnUiThread {
+                userPref.edit().putLong("lastSync", Date().time).apply()
+                beginNoteFetch(userPref)
+            }
         }.start()
     }
 
     private fun reloadList(notesStorage: NotesStorage, userPref: SharedPreferences) {
         val dataset = notesStorage.getNotes(svInfo.address, userPref.getString("currentUser", null))
-        val adapter = NotesAdapter(dataset.toTypedArray())
+        val adapter = NotesAdapter(dataset.toTypedArray(), cacher, this)
         val recyclerView: RecyclerView = findViewById(R.id.notesList)
         recyclerView.adapter=adapter
     }

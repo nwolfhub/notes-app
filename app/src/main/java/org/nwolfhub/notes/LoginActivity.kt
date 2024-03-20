@@ -72,8 +72,8 @@ class LoginActivity : AppCompatActivity() {
                     runOnUiThread {
                         Log.d("Codes", codes.toString())
                         val web = findViewById<WebView>(R.id.loginWebView)
-                        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
-                        web.getSettings().domStorageEnabled = true;
+                        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
+                        web.getSettings().domStorageEnabled = true
                         web.webViewClient = MyWebViewClient(verifier = codes[1])
                         web.loadUrl(url)
                     }

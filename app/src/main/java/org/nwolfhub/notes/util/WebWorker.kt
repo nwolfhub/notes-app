@@ -204,6 +204,18 @@ class WebWorker() {
         return "" //should be unreachable all the times
     }
 
+    fun deleteNote(server: ServerInfo, id: String, token: String) {
+        Log.d("Delete note", "Delete requested for note $id")
+        val response = client.newCall(Request.Builder()
+            .url(server.address + VersionToMethod.versions[server.version]!!["delete"]!!.replace("{id}", id))
+            .addHeader("Authorization", "Bearer $token")
+            .build()).execute()
+        Log.d("Delete note", "Server responded with code ${response.code}")
+        if(!response.isSuccessful) {
+            throw RuntimeException(response.code.toString())
+        }
+    }
+
     fun refreshAndPut(storage: ServerStorage):JsonObject {
         val refreshResult = refreshToken(prepareLogin(storage.activeServer!!)!!, storage.getRefreshToken(storage.activeServer!!.address)!!)
         val obj = JsonParser.parseString(refreshResult).asJsonObject
