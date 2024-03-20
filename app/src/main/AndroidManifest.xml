@@ -19,6 +19,11 @@
         android:theme="@style/Theme.Notes"
         tools:targetApi="31">
         <activity
+            android:name=".Edit"
+            android:exported="false"
+            android:label="@string/title_activity_edit"
+            android:theme="@style/Theme.Notes" />
+        <activity
             android:name=".Notes"
             android:exported="false" />
         <activity
@@ -29,8 +34,8 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_notes"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/title_activity_notes">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -60,10 +65,7 @@
         <activity
             android:name=".deprecated.Notes"
             android:exported="true"
-
-            android:theme="@style/Theme.Notes">
-
-        </activity>
+            android:theme="@style/Theme.Notes"></activity>
         <activity
             android:name=".deprecated.Welcome"
             android:exported="false"
