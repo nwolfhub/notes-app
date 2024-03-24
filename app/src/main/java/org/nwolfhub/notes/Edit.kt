@@ -53,12 +53,13 @@ class Edit : ComponentActivity() {
         activeNotePref = getSharedPreferences("active_note", MODE_PRIVATE)
         cachePref = getSharedPreferences("cached_notes", MODE_PRIVATE)
         note = Gson().fromJson(activeNotePref.getString("active", null), Note::class.java)
-        val prev = cachePref.getString(note.getServerAddr() + note.getOwner().getId() + note.getId(), null)
+        val prev =
+            cachePref.getString(note.getServerAddr() + note.getOwner().getId() + note.getId(), null)
         var prevText = ""
-        noteName=note.getName()
-        noteText=note.getContent()
-        prevText=noteText
-        if(prev!=null) {
+        noteName = note.getName()
+        noteText = note.getContent()
+        prevText = noteText
+        if (prev != null) {
             prevText = prev
         }
         setContent {
@@ -82,19 +83,35 @@ class Edit : ComponentActivity() {
             Modifier
                 .background(Color.Black)
                 .wrapContentHeight()
-                .fillMaxWidth()) {
-            TextButton(onClick = {Toast.makeText(this@Edit, "Я обязательно сделаю эту кнопку...", Toast.LENGTH_LONG).show()
-                                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://cs11.pikabu.ru/post_img/2020/07/16/6/og_og_15948909712400651.jpg")))},
-                Modifier.wrapContentWidth()) {
+                .fillMaxWidth()
+        ) {
+            TextButton(
+                onClick = {
+                    Toast.makeText(
+                        this@Edit,
+                        "Я обязательно сделаю эту кнопку...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://cs11.pikabu.ru/post_img/2020/07/16/6/og_og_15948909712400651.jpg")
+                        )
+                    )
+                },
+                Modifier.wrapContentWidth()
+            ) {
                 Icon(Icons.Default.Settings, contentDescription = "Localized description")
             }
             /*Text(text = noteName, fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.White, modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth())*/
             var name by rememberSaveable { mutableStateOf(noteName) }
-            TextField(value = name, onValueChange = {
-                name=it
-                this@Edit.noteName=it
+            TextField(value = name, placeholder = {
+                Text(text = "Name")
+            }, onValueChange = {
+                name = it
+                this@Edit.noteName = it
             })
         }
     }
@@ -102,10 +119,11 @@ class Edit : ComponentActivity() {
     @Composable
     fun MainEditField(previous: String) {
         var text by rememberSaveable { mutableStateOf(previous) }
-        Column(){
+        Column() {
             Row(
                 Modifier
-                    .weight(1f, true)) {
+                    .weight(1f, true)
+            ) {
                 TextField(
                     value = text,
                     onValueChange = {
@@ -123,12 +141,24 @@ class Edit : ComponentActivity() {
             }
             Row(
                 Modifier
-                    .wrapContentHeight()) {
+                    .wrapContentHeight()
+            ) {
                 Button(
                     onClick = {
-                        val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
-                        notesStorage.setLocalNote(note.setContent(text).setName(noteName).setSyncState(Note.SyncState.local))
-                        cachePref.edit().remove(note.getServerAddr() + note.getOwner().getId() + note.getId()).apply()
+                        if (noteText == "") {
+                            noteText = " "
+                        }
+                        val notesStorage = NotesStorage(
+                            getSharedPreferences("notes_updated", MODE_PRIVATE),
+                            getSharedPreferences("sync", MODE_PRIVATE)
+                        )
+                        notesStorage.setLocalNote(
+                            note.setContent(text).setName(noteName)
+                                .setSyncState(Note.SyncState.local)
+                        )
+                        cachePref.edit().remove(
+                            note.getServerAddr() + note.getOwner().getId() + note.getId()
+                        ).apply()
                         startActivity(Intent(this@Edit, Notes::class.java))
                         finish()
                     },
@@ -142,21 +172,24 @@ class Edit : ComponentActivity() {
     }
 
     private fun cacheText(text: String) {
-        cachePref.edit().putString(note.getServerAddr() + note.getOwner().getId() + note.getId(), text).apply()
+        cachePref.edit()
+            .putString(note.getServerAddr() + note.getOwner().getId() + note.getId(), text).apply()
     }
+
     @Composable
     fun AlertDialogFactory(
-        title:String,
-        content:String?,
+        title: String,
+        content: String?,
         button: @Composable () -> Unit
     ) {
         AlertDialog(onDismissRequest = {},
-            confirmButton = {button},
+            confirmButton = { button },
             title = { Text(text = title) },
             text = {
-                if (content!=null)
-                Text(text = content)
-                else {}
+                if (content != null)
+                    Text(text = content)
+                else {
+                }
             })
     }
 

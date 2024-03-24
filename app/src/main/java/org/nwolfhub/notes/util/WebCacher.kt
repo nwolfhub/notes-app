@@ -28,6 +28,9 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
                     if(note.syncState==Note.SyncState.synced) {
                         storage.deleteNote(server.address, me.id, note.id)
                     }
+                } else if(note.name.trim() == "" && note.content.trim() == "") {
+                    storage.deleteNote(server.address, me.id, note.id)
+                    worker.deleteNote(server, note.id, serverStorage.getToken(server.address).toString())
                 }
             }
         } catch (e: RuntimeException) {
@@ -77,9 +80,26 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
                 worker.deleteNote(server, id, serverStorage.getToken(server.address).toString())
                 storage.deleteNote(server.address, me.id, note.id)
             } catch (e: RuntimeException) {
-                if(e.equals("401"))  {reloadToken(); deleteNote(id)}
+                if(e.equals("401"))  {reloadToken(); deleteNote(id)} else throw e
             }
         }
+    }
+
+    fun createNote():String {
+        Log.d("Note creation", "Creation request sent")
+        try {
+            val response = worker.createNote(server, " ", serverStorage.getToken(server.address).toString())
+            Log.d("Note creation", "Creation request sent")
+            return response
+        } catch (e: RuntimeException) {
+            if(e.equals("401")) {
+                reloadToken()
+                createNote()
+            } else {
+                throw e
+            }
+        }
+        return "" //unreachable due to recursion in 401 check
     }
 
     private fun reloadToken() {

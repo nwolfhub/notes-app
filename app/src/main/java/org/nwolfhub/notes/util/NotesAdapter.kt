@@ -50,7 +50,12 @@ class NotesAdapter (private val dataset: Array<Note>, private val cacher: WebCac
                 .setTitle("Pick action")
                 .setPositiveButton("Delete") { _, _, ->
                     run {
-                        cacher.deleteNote(dataset[position].id)
+                        Thread {
+                            cacher.deleteNote(dataset[position].id)
+                            (context as Notes).runOnUiThread {
+                                context.reloadList()
+                            }
+                        }.start()
                     }
                 }
                 .show()

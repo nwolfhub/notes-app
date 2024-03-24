@@ -16,10 +16,14 @@ import android.view.View
 import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.CookieSyncManager
+import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.gson.Gson
 import org.nwolfhub.notes.deprecated.util.UpdateColors
 import org.nwolfhub.notes.model.Note
 import org.nwolfhub.notes.model.ServerInfo
@@ -55,6 +59,8 @@ class Notes : AppCompatActivity() {
         token = storage.getToken(svInfo.address)!!
         refreshToken = storage.getRefreshToken(svInfo.address)!!
         val userPref = getSharedPreferences("userData", MODE_PRIVATE)
+        val activeNotePref = getSharedPreferences("active_note", MODE_PRIVATE)
+        val newNote: FloatingActionButton = findViewById(R.id.new_note)
         val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
         cacher = WebCacher(storage, notesStorage, User().setId(userPref.getString("currentUser", null)), svInfo)
         cState = 2
@@ -84,6 +90,39 @@ class Notes : AppCompatActivity() {
                         }
                     }.show()
 
+        }
+        newNote.setOnClickListener {
+            state.isEnabled=false
+            findViewById<RecyclerView>(R.id.notesList).isEnabled=false
+            newNote.isEnabled = false
+            animateGradient(state, 5)
+            Thread {
+                try {
+                    val id = cacher.createNote()
+                    val me = User()
+                        .setId(userPref.getString("currentUser", null))
+                    val note = Note()
+                        .setId(id)
+                        .setName("")
+                        .setContent("")
+                        .setCreated(Date().time)
+                        .setEdited(Date().time)
+                        .setMe(me)
+                        .setOwner(me)
+                        .setServerAddr(svInfo.address)
+                    activeNotePref.edit().putString("active", Gson().toJson(note)).apply()
+                    startActivity(Intent(this, Edit::class.java))
+                    finish()
+                } catch (e: RuntimeException) {
+                    runOnUiThread {
+                        state.isEnabled=true
+                        findViewById<RecyclerView>(R.id.notesList).isEnabled=true
+                        newNote.isEnabled = true
+                        Toast.makeText(this, "Failed to create note: $e", Toast.LENGTH_LONG).show()
+                        animateGradient(state, 3)
+                    }
+                }
+            }.start()
         }
     }
 
@@ -140,6 +179,10 @@ class Notes : AppCompatActivity() {
             if(userPref.getLong("lastSync", 0)+86400000<Date().time) runOnUiThread {
                 userPref.edit().putLong("lastSync", Date().time).apply()
                 beginNoteFetch(userPref)
+            } else {
+                runOnUiThread{
+                    animateGradient(state, 3)
+                }
             }
             cacher.processQueue()
         }.start()
@@ -150,6 +193,10 @@ class Notes : AppCompatActivity() {
         val adapter = NotesAdapter(dataset.toTypedArray(), cacher, this)
         val recyclerView: RecyclerView = findViewById(R.id.notesList)
         recyclerView.adapter=adapter
+    }
+
+    fun reloadList() {
+        reloadList(NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE)), getSharedPreferences("userData", MODE_PRIVATE))
     }
 
 
@@ -177,6 +224,11 @@ class Notes : AppCompatActivity() {
                 start = Color.RED
                 mid = Color.BLACK
                 end = Color.MAGENTA
+            }
+            5 -> {
+                start=Color.YELLOW
+                mid = Color.BLACK
+                end = Color.LTGRAY
             }
         }
         val gradient = view.background as GradientDrawable

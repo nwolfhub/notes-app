@@ -27,19 +27,23 @@ class WebWorker() {
         } else null
     }
 
-    fun createNote(info: ServerInfo, name:String, content:String, token:String):String {
+    fun createNote(info: ServerInfo, content:String, token:String):String {
         val response = client
             .newCall(Request.Builder()
-                .url(info.address + VersionToMethod.versions[info.version]!!["create"] + "?name=" + URLEncoder.encode(name, Charsets.UTF_8.name()))
+                .url(info.address + VersionToMethod.versions[info.version]!!["create"] + "?name")
                 .addHeader("Authorization", "Bearer $token")
                 .post(content.toRequestBody())
                 .build()).execute();
-        Log.d("Server response", "Note creation result: " + (response.body?.string() ?: response.code))
+        var body:String? = null
+        if(response.body!=null) {
+            body = response.body?.string()
+        }
+        Log.d("Server response", "Note creation result: " + ( body?:response.code))
         if(response.isSuccessful) {
-            return JsonParser.parseString(response.body!!.string()).asJsonObject.get("id").asString
+            return JsonParser.parseString(body).asJsonObject.get("id").asString
         } else {
-            if(response.body!=null) {
-                Log.e("Note create", response.body!!.string())
+            if(body!=null) {
+                Log.e("Note create", body)
             }
             throw RuntimeException(response.code.toString())
         }
@@ -221,13 +225,5 @@ class WebWorker() {
         val obj = JsonParser.parseString(refreshResult).asJsonObject
         storage.setTokens(storage.activeServer!!.address, obj)
         return obj
-    }
-
-    fun beginRefresh(storage: ServerStorage) {
-        Thread {
-            while (true) {
-                val refreshResult = refreshAndPut(storage);
-            }
-        }.start()
     }
 }
