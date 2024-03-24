@@ -141,6 +141,7 @@ class Notes : AppCompatActivity() {
                 userPref.edit().putLong("lastSync", Date().time).apply()
                 beginNoteFetch(userPref)
             }
+            cacher.processQueue()
         }.start()
     }
 

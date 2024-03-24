@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import org.nwolfhub.notes.model.Note;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -59,6 +60,11 @@ public class NotesStorage {
         } else {
             notesPref.edit().putString(note.serverAddr + note.getMe().getId() + note.getId(), gson.toJson(note)).apply();
         }
+    }
+
+    public void setLocalNote(@NonNull Note note) {
+        addNoteToSyncQueue(note);
+        notesPref.edit().putString(note.serverAddr + note.getMe().getId() + note.getId(), gson.toJson(note.setEdited(new Date().getTime()))).apply();
     }
 
     public void addNoteToSyncQueue(@NonNull Note note) {

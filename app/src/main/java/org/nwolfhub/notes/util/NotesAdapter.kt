@@ -7,12 +7,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import org.nwolfhub.notes.Edit
 import org.nwolfhub.notes.Notes
 import org.nwolfhub.notes.R
 import org.nwolfhub.notes.ServerSelect
 import org.nwolfhub.notes.model.Note
+import org.nwolfhub.notes.model.User
 
 class NotesAdapter (private val dataset: Array<Note>, private val cacher: WebCacher, private val context: Context) : RecyclerView.Adapter<NotesAdapter.ViewHolder>() {
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -50,6 +55,12 @@ class NotesAdapter (private val dataset: Array<Note>, private val cacher: WebCac
                 }
                 .show()
             true
+        }
+        holder.itemView.setOnClickListener {
+            val activeNotePref = context.getSharedPreferences("active_note", ComponentActivity.MODE_PRIVATE)
+            activeNotePref.edit().putString("active", Gson().toJson(dataset[position])).apply()
+            context.startActivity(Intent(context, Edit::class.java))
+            (context as Notes).finish()
         }
     }
 }

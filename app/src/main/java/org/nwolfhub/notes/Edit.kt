@@ -1,6 +1,7 @@
 package org.nwolfhub.notes
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -41,15 +42,19 @@ import org.nwolfhub.notes.ui.theme.NotesTheme
 import org.nwolfhub.notes.util.NotesStorage
 
 class Edit : ComponentActivity() {
-    val activeNotePref = getSharedPreferences("active_note", MODE_PRIVATE)
-    val cachePref = getSharedPreferences("cached_notes", MODE_PRIVATE)
+    lateinit var activeNotePref: SharedPreferences
+    lateinit var cachePref: SharedPreferences
     lateinit var note: Note
     var noteText = ""
+    var noteName = ""
     val showDialog = mutableListOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activeNotePref = getSharedPreferences("active_note", MODE_PRIVATE)
+        cachePref = getSharedPreferences("cached_notes", MODE_PRIVATE)
         note = Gson().fromJson(activeNotePref.getString("active", null), Note::class.java)
         val prev = cachePref.getString(note.getServerAddr() + note.getOwner().getId() + note.getId(), null)
+
         var prevText = ""
         if(prev!=null) {
             prevText = prev
@@ -81,9 +86,14 @@ class Edit : ComponentActivity() {
                 Modifier.wrapContentWidth()) {
                 Icon(Icons.Default.Settings, contentDescription = "Localized description")
             }
-            Text(text = noteName, fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.White, modifier = Modifier
+            /*Text(text = noteName, fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.White, modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth())
+                .fillMaxWidth())*/
+            var name by rememberSaveable { mutableStateOf(noteName) }
+            TextField(value = name, onValueChange = {
+                name=it
+                this@Edit.noteName=it
+            })
         }
     }
 
@@ -115,6 +125,10 @@ class Edit : ComponentActivity() {
                 Button(
                     onClick = {
                         val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
+                        notesStorage.setLocalNote(note.setContent(text).setName(noteName))
+                        cachePref.edit().remove(note.getServerAddr() + note.getOwner().getId() + note.getId()).apply()
+                        startActivity(Intent(this@Edit, Notes::class.java))
+                        finish()
                     },
                     modifier = Modifier.fillMaxWidth()
 
