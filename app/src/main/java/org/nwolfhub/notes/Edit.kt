@@ -54,8 +54,10 @@ class Edit : ComponentActivity() {
         cachePref = getSharedPreferences("cached_notes", MODE_PRIVATE)
         note = Gson().fromJson(activeNotePref.getString("active", null), Note::class.java)
         val prev = cachePref.getString(note.getServerAddr() + note.getOwner().getId() + note.getId(), null)
-
         var prevText = ""
+        noteName=note.getName()
+        noteText=note.getContent()
+        prevText=noteText
         if(prev!=null) {
             prevText = prev
         }
@@ -125,7 +127,7 @@ class Edit : ComponentActivity() {
                 Button(
                     onClick = {
                         val notesStorage = NotesStorage(getSharedPreferences("notes_updated", MODE_PRIVATE), getSharedPreferences("sync", MODE_PRIVATE))
-                        notesStorage.setLocalNote(note.setContent(text).setName(noteName))
+                        notesStorage.setLocalNote(note.setContent(text).setName(noteName).setSyncState(Note.SyncState.local))
                         cachePref.edit().remove(note.getServerAddr() + note.getOwner().getId() + note.getId()).apply()
                         startActivity(Intent(this@Edit, Notes::class.java))
                         finish()

@@ -58,7 +58,7 @@ class WebCacher(private val serverStorage:ServerStorage, private val storage: No
         while (element!=null) {
             try {
                 Log.d("Upload notes", "Processing note ${element.id}")
-                worker.editNote(server, element.id, element.content, serverStorage.getToken(server.address).toString())
+                worker.editNote(server, element.id, element.content, element.name, serverStorage.getToken(server.address).toString())
                 element = storage.popNoteFromQueue()
             } catch (e: RuntimeException) {
                 if(e.equals("401")) {

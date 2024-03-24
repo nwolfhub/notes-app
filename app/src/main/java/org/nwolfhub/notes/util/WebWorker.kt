@@ -45,10 +45,10 @@ class WebWorker() {
         }
     }
 
-    fun editNote(info: ServerInfo, id: String, content: String, token: String) {
+    fun editNote(info: ServerInfo, id: String, content: String, name: String, token: String) {
         val response = client
             .newCall(Request.Builder()
-                .url(info.address + VersionToMethod.versions[info.version]!!["create"]!!.replace("{id}", id))
+                .url(info.address + VersionToMethod.versions[info.version]!!["edit"]!!.replace("{id}", id) + "?name=" + URLEncoder.encode(name, Charsets.UTF_8.name()))
                 .addHeader("Authorization", "Bearer $token")
                 .post(content.toRequestBody())
                 .build()).execute();
