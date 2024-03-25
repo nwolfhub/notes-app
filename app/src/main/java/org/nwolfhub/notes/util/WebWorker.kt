@@ -18,31 +18,36 @@ import org.nwolfhub.notes.model.VersionToMethod
 import java.net.URLEncoder
 
 class WebWorker() {
-    private val client:OkHttpClient = OkHttpClient()
+    private val client: OkHttpClient = OkHttpClient()
 
     fun prepareLogin(info: ServerInfo): String? {
-        val response = client.newCall(Request.Builder().url(info.address + VersionToMethod.versions[info.version]!!["login"]).build()).execute()
-        return if(response.isSuccessful) {
+        val response = client.newCall(
+            Request.Builder().url(info.address + VersionToMethod.versions[info.version]!!["login"])
+                .build()
+        ).execute()
+        return if (response.isSuccessful) {
             JsonParser.parseString(response.body!!.string()).asJsonObject.get("url").asString
         } else null
     }
 
-    fun createNote(info: ServerInfo, content:String, token:String):String {
+    fun createNote(info: ServerInfo, content: String, token: String): String {
         val response = client
-            .newCall(Request.Builder()
-                .url(info.address + VersionToMethod.versions[info.version]!!["create"] + "?name")
-                .addHeader("Authorization", "Bearer $token")
-                .post(content.toRequestBody())
-                .build()).execute();
-        var body:String? = null
-        if(response.body!=null) {
+            .newCall(
+                Request.Builder()
+                    .url(info.address + VersionToMethod.versions[info.version]!!["create"] + "?name")
+                    .addHeader("Authorization", "Bearer $token")
+                    .post(content.toRequestBody())
+                    .build()
+            ).execute();
+        var body: String? = null
+        if (response.body != null) {
             body = response.body?.string()
         }
-        Log.d("Server response", "Note creation result: " + ( body?:response.code))
-        if(response.isSuccessful) {
+        Log.d("Server response", "Note creation result: " + (body ?: response.code))
+        if (response.isSuccessful) {
             return JsonParser.parseString(body).asJsonObject.get("id").asString
         } else {
-            if(body!=null) {
+            if (body != null) {
                 Log.e("Note create", body)
             }
             throw RuntimeException(response.code.toString())
@@ -51,13 +56,20 @@ class WebWorker() {
 
     fun editNote(info: ServerInfo, id: String, content: String, name: String, token: String) {
         val response = client
-            .newCall(Request.Builder()
-                .url(info.address + VersionToMethod.versions[info.version]!!["edit"]!!.replace("{id}", id) + "?name=" + URLEncoder.encode(name, Charsets.UTF_8.name()))
-                .addHeader("Authorization", "Bearer $token")
-                .post(content.toRequestBody())
-                .build()).execute();
-        if(!response.isSuccessful) {
-            if(response.body!=null) {
+            .newCall(
+                Request.Builder()
+                    .url(
+                        info.address + VersionToMethod.versions[info.version]!!["edit"]!!.replace(
+                            "{id}",
+                            id
+                        ) + "?name=" + URLEncoder.encode(name, Charsets.UTF_8.name())
+                    )
+                    .addHeader("Authorization", "Bearer $token")
+                    .post(content.toRequestBody())
+                    .build()
+            ).execute();
+        if (!response.isSuccessful) {
+            if (response.body != null) {
                 Log.e("Note edit", response.body!!.string())
             }
             throw RuntimeException(response.code.toString())
@@ -65,13 +77,15 @@ class WebWorker() {
     }
 
     fun getNotes(server: ServerInfo, token: String): List<String> {
-        val response = client.newCall(Request.Builder()
-            .url(server.address + VersionToMethod.versions[server.version]!!["getnotes"])
-            .addHeader("Authorization", "Bearer $token")
-            .build()).execute()
-        if(!response.isSuccessful) {
+        val response = client.newCall(
+            Request.Builder()
+                .url(server.address + VersionToMethod.versions[server.version]!!["getnotes"])
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        ).execute()
+        if (!response.isSuccessful) {
             Log.e("Notes fetch", "Server responded with code: ${response.code}")
-            if(response.body!=null) {
+            if (response.body != null) {
                 Log.e("Notes fetch", response.body!!.string())
             }
             throw RuntimeException(response.code.toString())
@@ -80,7 +94,7 @@ class WebWorker() {
             val list = mutableListOf<String>()
             val body = response.body!!.string()
             val arr = JsonParser.parseString(body).asJsonObject.get("notes").asJsonArray
-            for(e in arr) {
+            for (e in arr) {
                 val noteObj = e.asJsonObject
                 list.add(noteObj.get("id").asString)
             }
@@ -92,13 +106,20 @@ class WebWorker() {
     }
 
     fun getNote(id: String, server: ServerInfo, token: String): Note {
-        val response = client.newCall(Request.Builder()
-            .url(server.address + VersionToMethod.versions[server.version]!!["get"]!!.replace("{id}", id))
-            .addHeader("Authorization", "Bearer $token")
-            .build()).execute()
-        if(!response.isSuccessful) {
+        val response = client.newCall(
+            Request.Builder()
+                .url(
+                    server.address + VersionToMethod.versions[server.version]!!["get"]!!.replace(
+                        "{id}",
+                        id
+                    )
+                )
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        ).execute()
+        if (!response.isSuccessful) {
             Log.e("Note fetch", "Server responded with code: ${response.code}")
-            if(response.body!=null) {
+            if (response.body != null) {
                 Log.e("Note fetch", response.body!!.string())
             }
             throw RuntimeException(response.code.toString())
@@ -115,10 +136,12 @@ class WebWorker() {
                     .setCreated(obj.get("created").asLong)
                     .setEdited(obj.get("edited").asLong)
                     .setServerAddr(server.address)
-                    .setOwner(User()
-                        .setId(obj.get("owner").asJsonObject.get("id").asString)
-                        .setFirstname(obj.get("owner").asJsonObject.get("name").asString)
-                        .setUsername(obj.get("owner").asJsonObject.get("username").asString))
+                    .setOwner(
+                        User()
+                            .setId(obj.get("owner").asJsonObject.get("id").asString)
+                            .setFirstname(obj.get("owner").asJsonObject.get("name").asString)
+                            .setUsername(obj.get("owner").asJsonObject.get("username").asString)
+                    )
                     .setSyncState(Note.SyncState.synced)
                 return note
             } catch (e: NullPointerException) {
@@ -128,21 +151,28 @@ class WebWorker() {
         }
     }
 
-    fun getToken(url:String, code:String, verifier:String):String? {
-        Log.d("Token exchange", "Original: " + url + ", replaced: " + url.replace("/auth", "/token"))
-        val response = client.newCall(Request.Builder()
-            .url(url.replace("/auth", "/token"))
-            .post(FormBody.Builder()
-                .add("code", code)
-                .add("code_verifier", verifier)
-                .add("grant_type", "authorization_code")
-                .add("client_id", "notes")
-                .build()).build()).execute()
+    fun getToken(url: String, code: String, verifier: String): String? {
+        Log.d(
+            "Token exchange",
+            "Original: " + url + ", replaced: " + url.replace("/auth", "/token")
+        )
+        val response = client.newCall(
+            Request.Builder()
+                .url(url.replace("/auth", "/token"))
+                .post(
+                    FormBody.Builder()
+                        .add("code", code)
+                        .add("code_verifier", verifier)
+                        .add("grant_type", "authorization_code")
+                        .add("client_id", "notes")
+                        .build()
+                ).build()
+        ).execute()
         Log.d("Token exchange", "Server responded with code " + response.code)
-        if(response.body!=null) {
+        if (response.body != null) {
             val strigified = response.body!!.string()
             Log.d("Token exchange", "Response body: $strigified")
-            if(response.isSuccessful) {
+            if (response.isSuccessful) {
                 return strigified;
             }
         }
@@ -150,24 +180,30 @@ class WebWorker() {
     }
 
     fun postLogin(server: ServerInfo, token: String) {
-        Thread {
-            val response = client.newCall(Request.Builder()
-                .url(server.address + VersionToMethod.versions[server.version]!!["postlogin"]!!)
-                .addHeader("Authorization", "Bearer $token")
-                .build())
+        var code = 202;
+        while (code == 202) {
+            val response = client.newCall(
+                Request.Builder()
+                    .url(server.address + VersionToMethod.versions[server.version]!!["postlogin"]!!)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+            )
                 .execute()
+            code=response.code
             Log.d("PostLogin result", response.code.toString())
-        }.start()
+        }
     }
 
     fun getMe(server: ServerInfo, token: String): User {
-        val response = client.newCall(Request.Builder()
-            .url(server.address + VersionToMethod.versions[server.version]!!["getme"]!!)
-            .addHeader("Authorization", "Bearer $token")
-            .build())
+        val response = client.newCall(
+            Request.Builder()
+                .url(server.address + VersionToMethod.versions[server.version]!!["getme"]!!)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        )
             .execute()
-        if(!response.isSuccessful) {
-            if(response.body!=null) {
+        if (!response.isSuccessful) {
+            if (response.body != null) {
                 Log.d("getMe", "Fail: " + response.body!!.string())
             } else {
                 Log.d("getMe", "Fail: " + response.code)
@@ -185,23 +221,27 @@ class WebWorker() {
         return user
     }
 
-    fun refreshToken(url:String, refresh: String):String {
+    fun refreshToken(url: String, refresh: String): String {
         Log.d("Token refresh", "Original: " + url + ", replaced: " + url.replace("/auth", "/token"))
-        val response = client.newCall(Request.Builder()
-            .url(url.replace("/auth", "/token"))
-            .post(FormBody.Builder()
-                .add("grant_type", "refresh_token")
-                .add("client_id", "notes")
-                .add("refresh_token", refresh)
-                .build()).build()).execute()
+        val response = client.newCall(
+            Request.Builder()
+                .url(url.replace("/auth", "/token"))
+                .post(
+                    FormBody.Builder()
+                        .add("grant_type", "refresh_token")
+                        .add("client_id", "notes")
+                        .add("refresh_token", refresh)
+                        .build()
+                ).build()
+        ).execute()
         Log.d("Token refresh", "Server responded with code " + response.code)
-        if(!response.isSuccessful) {
+        if (!response.isSuccessful) {
             throw RuntimeException(response.code.toString())
         }
-        if(response.body!=null) {
+        if (response.body != null) {
             val strigified = response.body!!.string()
             Log.d("Token refresh", "Response body: $strigified")
-            if(response.isSuccessful) {
+            if (response.isSuccessful) {
                 return strigified;
             }
         }
@@ -210,18 +250,28 @@ class WebWorker() {
 
     fun deleteNote(server: ServerInfo, id: String, token: String) {
         Log.d("Delete note", "Delete requested for note $id")
-        val response = client.newCall(Request.Builder()
-            .url(server.address + VersionToMethod.versions[server.version]!!["delete"]!!.replace("{id}", id))
-            .addHeader("Authorization", "Bearer $token")
-            .build()).execute()
+        val response = client.newCall(
+            Request.Builder()
+                .url(
+                    server.address + VersionToMethod.versions[server.version]!!["delete"]!!.replace(
+                        "{id}",
+                        id
+                    )
+                )
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        ).execute()
         Log.d("Delete note", "Server responded with code ${response.code}")
-        if(!response.isSuccessful) {
+        if (!response.isSuccessful) {
             throw RuntimeException(response.code.toString())
         }
     }
 
-    fun refreshAndPut(storage: ServerStorage):JsonObject {
-        val refreshResult = refreshToken(prepareLogin(storage.activeServer!!)!!, storage.getRefreshToken(storage.activeServer!!.address)!!)
+    fun refreshAndPut(storage: ServerStorage): JsonObject {
+        val refreshResult = refreshToken(
+            prepareLogin(storage.activeServer!!)!!,
+            storage.getRefreshToken(storage.activeServer!!.address)!!
+        )
         val obj = JsonParser.parseString(refreshResult).asJsonObject
         storage.setTokens(storage.activeServer!!.address, obj)
         return obj
