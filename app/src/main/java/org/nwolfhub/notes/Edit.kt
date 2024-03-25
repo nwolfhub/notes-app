@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.background
@@ -73,6 +74,10 @@ class Edit : ComponentActivity() {
                         MainEditField(prevText)
                     }
                 }
+            }
+            BackHandler {
+                startActivity(Intent(this, Edit::class.java))
+                finish()
             }
         }
     }
@@ -192,5 +197,4 @@ class Edit : ComponentActivity() {
                 }
             })
     }
-
 }
