@@ -76,7 +76,7 @@ class Edit : ComponentActivity() {
                 }
             }
             BackHandler {
-                startActivity(Intent(this, Edit::class.java))
+                startActivity(Intent(this, Notes::class.java))
                 finish()
             }
         }
